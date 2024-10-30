@@ -7,6 +7,7 @@ API of the SanteActive project using FastAPI.
 ### Prerequisites
 
 - Python 3.10+
+- PostgreSQL
 
 ### Installation
 
@@ -34,7 +35,21 @@ source .venv/Scripts/activate
 pip install -r requirements.txt
 ```
 
-5. Run the server
+5. Create a 'config.json' file in the 'app' directory with the following content:
+
+```json
+{
+    "db": {
+      "host": "localhost",
+      "port": 5432,
+      "user": "your_user",
+      "password": "your_password",
+      "database": "your_database"
+    }
+}
+```
+
+6. Run the server
 
 ```bash
 uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
