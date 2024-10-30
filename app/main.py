@@ -1,11 +1,13 @@
 import random
 from fastapi import FastAPI
-from app.routers import users
-from sqlmodel import SQLModel
-from app.dependencies import engine
-from contextlib import asynccontextmanager
-from app.config import logger
 from fastapi.middleware.cors import CORSMiddleware
+from sqlmodel import SQLModel
+from contextlib import asynccontextmanager
+from app.routers import users
+from app.dependencies import engine
+from app.config import logger
+
+API_PREFIX = "/api"
 
 app = FastAPI()
 
@@ -27,7 +29,7 @@ def read_random():
     logger.debug(f"Generated random number: {r}")
     return {"random": r}
 
-app.include_router(users.router, prefix="/api", tags=["users"])
+app.include_router(users.router, prefix=f"{API_PREFIX}/users", tags=["users"])
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
