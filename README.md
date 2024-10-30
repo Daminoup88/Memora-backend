@@ -35,7 +35,7 @@ python -m venv .venv
 pip install -r requirements.txt
 ```
 
-5. Create a 'config.json' file in the 'app' directory with the following content:
+5. Edit the 'config.json' file in the 'app' directory with your personal information:
 
 ```json
 {
