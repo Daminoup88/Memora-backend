@@ -58,3 +58,11 @@ uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
 ## Usage
 
 The API documentation is available at `http://localhost:8000/docs`. To access the API from another device on the same network, replace `localhost` with the IP address of the host machine. Make sure the port is open and accessible to other devices.
+
+## Testing
+
+To run the tests and coverage, use the following command in the root directory:
+
+```bash
+pytest --cov
+```
