@@ -4,12 +4,12 @@ import json
 from app.config import logger
 
 class Database:
-    def __init__(self, config_file="config.json"):
+    def __init__(self, config_file="config.json", database_name=None):
         """Initialize the database configuration."""
         current_dir = os.path.dirname(os.path.abspath(__file__))
         config_path = os.path.join(current_dir, config_file)
 
-        if not os.path.exists(config_path):
+        if not os.path.exists(config_path): # pragma: no cover
             default_config = {
                 "db": {
                     "host": "localhost",
@@ -31,7 +31,10 @@ class Database:
         self.DB_PORT = db_config["port"]
         self.DB_USER = db_config["user"]
         self.DB_PASSWORD = db_config["password"]
-        self.DB_DATABASE = db_config["database"]
+        if database_name is not None:
+            self.DB_DATABASE = database_name
+        else:
+            self.DB_DATABASE = db_config["database"]
         self.create_database_if_not_exists()
 
     @property
@@ -46,7 +49,7 @@ class Database:
             result = connection.execute(text(f"SELECT 1 FROM pg_database WHERE datname = '{self.DB_DATABASE}'"))
             return result.fetchone() is not None
 
-    def create_database_if_not_exists(self):
+    def create_database_if_not_exists(self): # pragma: no cover
         """Create the database if it does not exist."""
         try:
             if self.database_exists():

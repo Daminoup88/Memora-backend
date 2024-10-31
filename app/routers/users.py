@@ -5,7 +5,8 @@ from app.schemas.user import UserCreate, UserRead
 from app.dependencies import get_session
 from app.crud.user import create_user, read_user, update_user, delete_user
 
-router = APIRouter(responses={404: {"description": "Not found", "content": {"application/json": {"example": {"detail": "User not found"}}}}})
+router = APIRouter(responses={404: {"description": "Not found", "content": {"application/json": {"example": {"detail": "string"}}}},
+                              400: {"description": "Bad Request", "content": {"application/json": {"example": {"detail": "string"}}}}})
 
 @router.post("/", response_model=UserRead)
 def create_user_route(user: UserCreate, session: Session = Depends(get_session)):

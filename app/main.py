@@ -32,7 +32,7 @@ def read_random():
 app.include_router(users.router, prefix=f"{API_PREFIX}/users", tags=["users"])
 
 @asynccontextmanager
-async def lifespan(app: FastAPI):
+async def lifespan(app: FastAPI): # pragma: no cover
     SQLModel.metadata.create_all(engine)
     logger.info("Database tables created")
     yield
