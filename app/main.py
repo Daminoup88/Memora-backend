@@ -6,6 +6,7 @@ from contextlib import asynccontextmanager
 from app.routers import users
 from app.dependencies import engine
 from app.config import logger
+from app.routers import auth
 
 API_PREFIX = "/api"
 
@@ -30,9 +31,7 @@ def read_random():
     return {"random": r}
 
 app.include_router(users.router, prefix=f"{API_PREFIX}/users", tags=["users"])
+app.include_router(auth.router, prefix=f"{API_PREFIX}/auth", tags=["auth"])
 
-@asynccontextmanager
-async def lifespan(app: FastAPI): # pragma: no cover
-    SQLModel.metadata.create_all(engine)
-    logger.info("Database tables created")
-    yield
+SQLModel.metadata.create_all(engine)
+logger.info("Database tables created")
