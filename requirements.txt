@@ -1,9 +1,11 @@
 annotated-types==0.7.0
 anyio==4.6.2.post1
 certifi==2024.8.30
+cffi==1.17.1
 click==8.1.7
 colorama==0.4.6
 coverage==7.6.4
+cryptography==44.0.0
 dnspython==2.7.0
 email_validator==2.2.0
 exceptiongroup==1.2.2
@@ -21,11 +23,14 @@ markdown-it-py==3.0.0
 MarkupSafe==3.0.2
 mdurl==0.1.2
 packaging==24.1
+passlib==1.7.4
 pluggy==1.5.0
 psycopg2==2.9.10
+pycparser==2.22
 pydantic==2.9.2
 pydantic_core==2.23.4
 Pygments==2.18.0
+PyJWT==2.10.1
 pytest==8.3.3
 pytest-cov==6.0.0
 python-dotenv==1.0.1
