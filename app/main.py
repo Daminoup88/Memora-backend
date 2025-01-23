@@ -3,7 +3,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from sqlmodel import SQLModel
 from contextlib import asynccontextmanager
-from app.routers import users
+from app.routers import user
 from app.dependencies import engine
 from app.config import logger
 from app.routers import auth
@@ -30,7 +30,7 @@ def read_random():
     logger.debug(f"Generated random number: {r}")
     return {"random": r}
 
-app.include_router(users.router, prefix=f"{API_PREFIX}/users", tags=["users"])
+app.include_router(user.router, prefix=f"{API_PREFIX}/users", tags=["users"])
 app.include_router(auth.router, prefix=f"{API_PREFIX}/auth", tags=["auth"])
 
 SQLModel.metadata.create_all(engine)

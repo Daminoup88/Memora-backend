@@ -21,14 +21,14 @@ def read_user_by_id(session: Session, user_id: int) -> User:
 def read_user_by_email(session: Session, email: str) -> User:
     return session.exec(select(User).where(User.email == email)).first()
 
-def update_user(session: Session, current_user: User, user: UserCreate) -> User:
+def update_user(session: Session, current_user: User, user: User) -> User:
     existing_user = session.exec(select(User).where(User.email == user.email)).first()
     if existing_user and existing_user.id != current_user.id:
         raise HTTPException(status_code=400, detail="Email already registered")
-
     if current_user:
         for key, value in user.model_dump().items():
-            setattr(current_user, key, value)
+            if value != None:
+                setattr(current_user, key, value)
         session.commit()
         session.refresh(current_user)
         return current_user

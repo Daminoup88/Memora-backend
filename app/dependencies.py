@@ -28,7 +28,7 @@ def authenticate_user(session: Session, email: str, password: str) -> User:
     return user
 
 def verify_password(plain_password, hashed_password):
-    return pwd_context.verify(plain_password, hashed_password, scheme=pwd_context.default_scheme())
+    return pwd_context.verify(plain_password, hashed_password)
 
 def create_access_token(data: dict):
     to_encode = data.copy()
@@ -42,6 +42,12 @@ async def get_current_user(token: Annotated[str, Depends(oauth2_scheme)], sessio
     try:
         payload = jwt.decode(token, secret_key, algorithms=algorithm)
     except InvalidTokenError:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Could not validate credentials",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+    if not payload["sub"].isdigit():
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Could not validate credentials",
