@@ -8,7 +8,9 @@ from app.schemas.token import Token
 from app.dependencies import authenticate_user, create_access_token
 from typing import Annotated
 
-router = APIRouter()
+router = APIRouter(responses={401: {"description": "Unauthorized", "content": {"application/json": {"example": {"detail": "string"}}}},
+                              422: {"description": "Unprocessable Entity", "content": {"application/json": {"example": {"detail": "string"}}}}
+                              })
 
 @router.post("/token")
 def login_for_access_token(form_data: Annotated[OAuth2PasswordRequestForm, Depends()], session: Session = Depends(get_session))-> Token:

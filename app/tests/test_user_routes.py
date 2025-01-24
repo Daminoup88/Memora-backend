@@ -125,7 +125,7 @@ def test_read_user(client: TestClient, session: Session):
     assert UserRead(**data)
     assert "hashed_password" not in data
 
-def test_read_user_not_found(client: TestClient, session: Session):
+def test_read_user_not_found(client: TestClient):
     # create fake access token
     fake_access_token = create_access_token(data={"sub": 1})
     # read user not in database
@@ -135,7 +135,7 @@ def test_read_user_not_found(client: TestClient, session: Session):
     data = response.json()
     assert data["detail"] == "User not found"
 
-def test_read_user_invalid_id(client: TestClient, session: Session):
+def test_read_user_invalid_id(client: TestClient):
     # read user with invalid id
     fake_access_token = create_access_token(data={"sub": "invalid_id"})
     # read user not in database
@@ -145,7 +145,7 @@ def test_read_user_invalid_id(client: TestClient, session: Session):
     data = response.json()
     assert data["detail"] == "Could not validate credentials"
     
-def test_read_user_invalid_token(client: TestClient, session: Session):
+def test_read_user_invalid_token(client: TestClient):
     # read user with invalid token
     response = client.get("/api/users/", headers={"Authorization": "Bearer invalid_token"})
     # check response
@@ -196,9 +196,10 @@ def test_update_user(client: TestClient, session: Session):
     assert user.email == updated_user["email"]
     assert user.age == updated_user["age"]
     assert user.hashed_password != updated_user["password"]
+    assert UserRead(**data)
     assert verify_password(updated_user["password"], user.hashed_password)
 
-def test_update_user_not_found(client: TestClient, session: Session):
+def test_update_user_not_found(client: TestClient):
     # create fake access token
     fake_access_token = create_access_token(data={"sub": 1})
     # update user not in database
@@ -208,7 +209,7 @@ def test_update_user_not_found(client: TestClient, session: Session):
     data = response.json()
     assert data["detail"] == "User not found"
 
-def test_update_user_invalid_id(client: TestClient, session: Session):
+def test_update_user_invalid_id(client: TestClient):
     # update user with invalid id
     fake_access_token = create_access_token(data={"sub": "invalid_id"})
     response = client.put("/api/users/", json=USER1, headers={"Authorization": f"Bearer {fake_access_token}"})
@@ -217,7 +218,7 @@ def test_update_user_invalid_id(client: TestClient, session: Session):
     data = response.json()
     assert data["detail"] == "Could not validate credentials"
 
-def test_update_user_invalid_token(client: TestClient, session: Session):
+def test_update_user_invalid_token(client: TestClient):
     # update user with invalid token
     response = client.put("/api/users/", json=USER1, headers={"Authorization": "Bearer invalid_token"})
     # check response
@@ -362,7 +363,7 @@ def test_delete_user(client: TestClient, session: Session):
     user = session.get(User, user_id)
     assert user is None
     
-def test_delete_user_not_found(client: TestClient, session: Session):
+def test_delete_user_not_found(client: TestClient):
     # create fake access token
     fake_access_token = create_access_token(data={"sub": 1})
     # delete user not in database
@@ -372,7 +373,7 @@ def test_delete_user_not_found(client: TestClient, session: Session):
     data = response.json()
     assert data["detail"] == "User not found"
 
-def test_delete_user_invalid_id(client: TestClient, session: Session):
+def test_delete_user_invalid_id(client: TestClient):
     # delete user with invalid id
     fake_access_token = create_access_token(data={"sub": "invalid_id"})
     response = client.delete("/api/users/", headers={"Authorization": f"Bearer {fake_access_token}"})
@@ -381,7 +382,7 @@ def test_delete_user_invalid_id(client: TestClient, session: Session):
     data = response.json()
     assert data["detail"] == "Could not validate credentials"
 
-def test_delete_user_invalid_token(client: TestClient, session: Session):
+def test_delete_user_invalid_token(client: TestClient):
     # delete user with invalid token
     response = client.delete("/api/users/", headers={"Authorization": "Bearer invalid_token"})
     # check response

@@ -10,7 +10,6 @@ from fastapi import HTTPException, status, Depends
 from typing import Annotated
 
 # Database
-
 engine = create_engine(database.DATABASE_URL)
 
 def get_session() -> Generator[Session, None, None]: # pragma: no cover
@@ -18,7 +17,6 @@ def get_session() -> Generator[Session, None, None]: # pragma: no cover
         yield session
 
 # Authentication
-
 def authenticate_user(session: Session, email: str, password: str) -> User:
     user = read_user_by_email(session, email)
     if not user:

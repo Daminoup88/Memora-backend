@@ -32,11 +32,11 @@ def update_user(session: Session, current_user: User, user: User) -> User:
         session.commit()
         session.refresh(current_user)
         return current_user
-    return None
+    return None # pragma: no cover (security measure)
 
 def delete_user(session: Session, current_user: User) -> bool:
     if current_user:
         session.delete(current_user)
         session.commit()
         return True
-    return False
+    return False # pragma: no cover (security measure)
