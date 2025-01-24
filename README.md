@@ -64,5 +64,5 @@ The API documentation is available at `http://localhost:8000/docs`. To access th
 To run the tests and coverage, use the following command in the root directory:
 
 ```bash
-pytest --cov
+pytest --cov=app --cov-report=html
 ```
