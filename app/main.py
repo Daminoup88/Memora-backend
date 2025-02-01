@@ -2,7 +2,6 @@ import random
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from sqlmodel import SQLModel
-from contextlib import asynccontextmanager
 from app.routers import router_user
 from app.dependencies import engine
 from app.config import logger
