@@ -2,9 +2,9 @@ from fastapi import APIRouter, HTTPException, Depends, status
 from fastapi.security import OAuth2PasswordRequestForm
 from sqlmodel import Session
 from datetime import timedelta
-from app.models.user import User
+from app.models.model_user import User
 from app.dependencies import get_session
-from app.schemas.token import Token
+from app.schemas.schema_token import Token
 from app.dependencies import authenticate_user, create_access_token
 from typing import Annotated
 

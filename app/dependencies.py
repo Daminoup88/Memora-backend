@@ -1,8 +1,8 @@
 from sqlmodel import Session, create_engine
 from app.database import database
 from typing import Generator
-from app.models.user import User
-from app.crud.user import read_user_by_email, read_user_by_id
+from app.models.model_user import User
+from app.crud.crud_user import read_user_by_email, read_user_by_id
 from app.config import pwd_context, oauth2_scheme, secret_key, algorithm
 import jwt
 from jwt import InvalidTokenError

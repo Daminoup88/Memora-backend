@@ -1,7 +1,7 @@
 from fastapi.testclient import TestClient
 from sqlmodel import Session, select
-from app.models.user import User
-from app.schemas.user import UserCreate, UserRead
+from app.models.model_user import User
+from app.schemas.schema_user import UserCreate, UserRead
 from app.dependencies import get_password_hash, create_access_token, verify_password
 
 USER1 = {"first_name": "John", "last_name": "Doe", "email": "john.doe@gmail.com", "age": 30, "password": "password"}

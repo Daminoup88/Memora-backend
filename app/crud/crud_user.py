@@ -1,7 +1,7 @@
 from sqlmodel import Session, select
 from fastapi import HTTPException
-from app.models.user import User
-from app.schemas.user import UserCreate
+from app.models.model_user import User
+from app.schemas.schema_user import UserCreate
 
 def create_user(session: Session, user: User) -> User:
     user = User(**user.model_dump())

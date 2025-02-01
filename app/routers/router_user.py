@@ -1,9 +1,9 @@
 from fastapi import APIRouter, HTTPException, Depends
 from sqlmodel import Session
-from app.models.user import User
-from app.schemas.user import UserCreate, UserRead
+from app.models.model_user import User
+from app.schemas.schema_user import UserCreate, UserRead
 from app.dependencies import get_session, get_password_hash, get_current_user
-from app.crud.user import create_user, read_user_by_id, update_user, delete_user
+from app.crud.crud_user import create_user, read_user_by_id, update_user, delete_user
 from typing import Annotated
 
 router = APIRouter(responses={400: {"description": "Bad Request", "content": {"application/json": {"example": {"detail": "string"}}}},
