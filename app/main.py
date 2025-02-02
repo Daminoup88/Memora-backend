@@ -19,6 +19,10 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+# Uncomment the following lines to enable HTTPS redirection
+# from fastapi.middleware.httpsredirect import HTTPSRedirectMiddleware
+# app.add_middleware(HTTPSRedirectMiddleware)
+
 @app.get("/")
 def read_root():
     return {"Hello": "World"}
