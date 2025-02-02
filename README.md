@@ -35,18 +35,14 @@ python -m venv .venv
 pip install -r requirements.txt
 ```
 
-5. Edit the 'config.json' file in the 'app' directory with your personal information:
-
-```json
-{
-    "db": {
-      "host": "localhost",
-      "port": 5432,
-      "user": "your_user",
-      "password": "your_password",
-      "database": "your_database"
-    }
-}
+5. Add the ".env" file in the root directory with your personal information:
+  
+```bash
+DATABASE_HOST=localhost
+DATABASE_PORT=5432
+DATABASE_USER=user
+DATABASE_PASSWORD=password
+DATABASE_NAME=database
 ```
 
 6. Run the server
