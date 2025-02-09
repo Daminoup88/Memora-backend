@@ -1,4 +1,3 @@
-import os
 from sqlalchemy import create_engine, text
 from app.config import logger, settings
 
@@ -12,10 +11,15 @@ class Database:
     def DATABASE_URL(self):
         """Return the database URL."""
         return f"postgresql://{settings.database_user}:{settings.database_password}@{settings.database_host}:{settings.database_port}/{settings.database_name}"
+    
+    @property
+    def DATABASE_SERVER(self):
+        """Return the database URL without the database name."""
+        return f"postgresql://{settings.database_user}:{settings.database_password}@{settings.database_host}:{settings.database_port}/"
 
     def database_exists(self):
         """Check if the database already exists."""
-        engine = create_engine(self.DATABASE_URL)
+        engine = create_engine(self.DATABASE_SERVER)
         with engine.connect() as connection:
             result = connection.execute(text(f"SELECT 1 FROM pg_database WHERE datname = '{settings.database_name}'"))
             return result.fetchone() is not None
@@ -27,7 +31,7 @@ class Database:
                 logger.info(f"The database '{settings.database_name}' already exists.")
                 return
             
-            engine = create_engine(self.DATABASE_URL)
+            engine = create_engine(self.DATABASE_SERVER)
             with engine.connect() as connection:
                 connection.execution_options(isolation_level="AUTOCOMMIT")
                 query = text(f"CREATE DATABASE {settings.database_name}")

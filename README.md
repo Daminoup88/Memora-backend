@@ -48,7 +48,7 @@ DATABASE_NAME=database
 6. Run the server
 
 ```bash
-uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
+fastapi run --reload --host 0.0.0.0 --port 8000
 ```
 
 ## Usage

@@ -7,6 +7,10 @@ from app.dependencies import engine
 from app.config import logger
 from app.routers import router_auth
 
+# Load tables to metadata
+from app.models.model_user import User
+from app.models.model_tables import Account, Manager, Patient, Question, Result, Quiz, QuizQuestion
+
 API_PREFIX = "/api"
 
 app = FastAPI()
