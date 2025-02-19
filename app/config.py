@@ -3,6 +3,7 @@ from passlib.context import CryptContext
 from fastapi.security import OAuth2PasswordBearer
 from pydantic_settings import BaseSettings, SettingsConfigDict
 class Settings(BaseSettings):
+    database_driver: str
     database_host: str
     database_port: int
     database_user: str

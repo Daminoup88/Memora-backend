@@ -38,6 +38,7 @@ pip install -r requirements.txt
 5. Add the ".env" file in the root directory with your personal information:
   
 ```bash
+DATABASE_DRIVER=postgresql
 DATABASE_HOST=localhost
 DATABASE_PORT=5432
 DATABASE_USER=user

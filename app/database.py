@@ -10,12 +10,12 @@ class Database:
     @property
     def DATABASE_URL(self):
         """Return the database URL."""
-        return f"postgresql://{settings.database_user}:{settings.database_password}@{settings.database_host}:{settings.database_port}/{settings.database_name}"
+        return f"{settings.database_driver}://{settings.database_user}:{settings.database_password}@{settings.database_host}:{settings.database_port}/{settings.database_name}"
     
     @property
     def DATABASE_SERVER(self):
         """Return the database URL without the database name."""
-        return f"postgresql://{settings.database_user}:{settings.database_password}@{settings.database_host}:{settings.database_port}/"
+        return f"{settings.database_driver}://{settings.database_user}:{settings.database_password}@{settings.database_host}:{settings.database_port}/"
 
     def database_exists(self):
         """Check if the database already exists."""
