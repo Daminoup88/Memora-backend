@@ -6,7 +6,7 @@ from app.dependencies import get_session
 from app.database import Database
 
 # Import the models to test to create the tables from metadata
-from app.models.model_user import User
+from app.models.model_tables import Account, Manager, Patient, Question, Result, Quiz, QuizQuestion
 
 @pytest.fixture(name="session")
 def session_fixture():

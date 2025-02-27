@@ -2,13 +2,12 @@ import random
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from sqlmodel import SQLModel
-from app.routers import router_user
+from app.routers import router_account
 from app.dependencies import engine
 from app.config import logger
 from app.routers import router_auth
 
 # Load tables to metadata
-from app.models.model_user import User
 from app.models.model_tables import Account, Manager, Patient, Question, Result, Quiz, QuizQuestion
 
 API_PREFIX = "/api"
@@ -37,7 +36,7 @@ def read_random():
     logger.debug(f"Generated random number: {r}")
     return {"random": r}
 
-app.include_router(router_user.router, prefix=f"{API_PREFIX}/users", tags=["users"])
+app.include_router(router_account.router, prefix=f"{API_PREFIX}/accounts", tags=["users"])
 app.include_router(router_auth.router, prefix=f"{API_PREFIX}/auth", tags=["auth"])
 
 SQLModel.metadata.create_all(engine)

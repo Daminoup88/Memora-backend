@@ -168,3 +168,6 @@ cython_debug/
 # SSL certificate
 cert.pem
 key.pem
+
+# vscode
+.vscode/
