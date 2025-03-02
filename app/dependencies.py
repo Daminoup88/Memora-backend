@@ -3,7 +3,8 @@ from app.database import database
 from typing import Generator
 from app.models.model_tables import Account
 from app.crud.crud_account import read_account_by_id, read_account_by_username
-from app.config import pwd_context, oauth2_scheme, secret_key, algorithm
+from app.config import pwd_context, settings
+from fastapi.security import OAuth2PasswordBearer
 import jwt
 from jwt import InvalidTokenError
 from fastapi import HTTPException, status, Depends
@@ -17,6 +18,8 @@ def get_session() -> Generator[Session, None, None]: # pragma: no cover
         yield session
 
 # Authentication
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/auth/token")
+
 def authenticate_account(session: Session, email: str, password: str) -> Account:
     account = read_account_by_username(session, email)
     if not account:
@@ -31,14 +34,14 @@ def verify_password(plain_password, hashed_password):
 def create_access_token(data: dict):
     to_encode = data.copy()
     to_encode["sub"] = str(to_encode["sub"])
-    return jwt.encode(to_encode, secret_key, algorithm=algorithm)
+    return jwt.encode(to_encode, settings.token_secret_key, algorithm=settings.token_algorithm)
 
 def get_password_hash(password):
     return pwd_context.hash(password)
 
 async def get_current_account(token: Annotated[str, Depends(oauth2_scheme)], session: Session = Depends(get_session)):
     try:
-        payload = jwt.decode(token, secret_key, algorithms=algorithm)
+        payload = jwt.decode(token, settings.token_secret_key, algorithms=settings.token_algorithm)
     except InvalidTokenError:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
