@@ -3,8 +3,6 @@ from fastapi import HTTPException
 from app.models.model_tables import Account, Patient
 
 def create_patient(session: Session, patient: Patient, current_account: Account) -> bool:
-    # check if there is no patient associated with this account already
-    print("####################### create_patient :" + str(current_account.patient_id))
     if current_account.patient_id is not None:
         raise HTTPException(status_code=400, detail="Patient already registered")
     
