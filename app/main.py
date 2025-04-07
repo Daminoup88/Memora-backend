@@ -7,6 +7,7 @@ from app.dependencies import engine
 from app.config import logger
 from app.routers import router_auth
 from app.routers import router_patient
+from app.routers import router_manager
 
 # Load tables to metadata
 from app.models.model_tables import Account, Manager, Patient, Question, Result, Quiz, QuizQuestion
@@ -40,6 +41,7 @@ def read_random():
 app.include_router(router_account.router, prefix=f"{API_PREFIX}/accounts", tags=["users"])
 app.include_router(router_auth.router, prefix=f"{API_PREFIX}/auth", tags=["auth"])
 app.include_router(router_patient.router, prefix=f"{API_PREFIX}/patients", tags=["patient"])
+app.include_router(router_manager.router, prefix=f"{API_PREFIX}/managers", tags=["manager"])
 
 SQLModel.metadata.create_all(engine)
 logger.info("Database tables created")
