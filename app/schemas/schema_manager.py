@@ -2,6 +2,7 @@ from sqlmodel import SQLModel
 from datetime import date
 
 class ManagerRead(SQLModel):
+    id: int
     firstname: str
     lastname: str
     relationship: str

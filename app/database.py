@@ -39,5 +39,17 @@ class Database:
                 logger.info(f"The database '{settings.database_name}' has been successfully created.")
         except Exception as e:
             logger.error(f"An error occurred: {e}")
+    
+    def drop_database(self): # pragma: no cover
+        """Drop the database."""
+        try:
+            engine = create_engine(self.DATABASE_SERVER)
+            with engine.connect() as connection:
+                connection.execution_options(isolation_level="AUTOCOMMIT")
+                query = text(f"DROP DATABASE {settings.database_name}")
+                connection.execute(query)
+                logger.info(f"The database '{settings.database_name}' has been successfully dropped.")
+        except Exception as e:
+            logger.error(f"An error occurred: {e}")
 
 database = Database()

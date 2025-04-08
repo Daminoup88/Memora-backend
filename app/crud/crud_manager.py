@@ -16,25 +16,29 @@ def create_manager(session: Session, manager: Manager, current_account: Account)
 
     return True
 
-def read_managers_by_account_id(session: Session, account_id: int) -> list[Manager]:
-    managers = session.exec(select(Manager).where(Manager.account_id == account_id)).all()
+def read_managers(session: Session, current_account: Account) -> list[Manager]:
+    managers = session.exec(select(Manager).where(Manager.account_id == current_account.id)).all()
     if not managers:
         raise HTTPException(status_code=404, detail="No managers found")
 
     return managers
 
-def read_manager_by_id(session: Session, manager_id: int) -> Manager:
+def read_manager_by_id(session: Session, manager_id: int, current_account: Account) -> Manager:
     manager = session.get(Manager, manager_id)
     if not manager:
         raise HTTPException(status_code=404, detail="Manager not found")
+    if manager.account_id != current_account.id:
+        raise HTTPException(status_code=403, detail="Not authorized to perform this action")
     return manager
 
-def update_manager(session: Session, manager_id: int, manager_data: Manager) -> Manager:
+def update_manager(session: Session, manager_id: int, manager_data: Manager, current_account: Account) -> Manager:
     manager = session.get(Manager, manager_id)
     if not manager:
         raise HTTPException(status_code=404, detail="Manager not found")
+    if manager.account_id != current_account.id:
+        raise HTTPException(status_code=403, detail="Not authorized to perform this action")
     
-    email_check = session.exec(select(Manager).where(Manager.email == manager.email)).first()
+    email_check = session.exec(select(Manager).where(Manager.email == manager_data.email, Manager.id != manager_id)).first()
     if email_check:
         raise HTTPException(status_code=400, detail="Email already used")
 
@@ -46,10 +50,12 @@ def update_manager(session: Session, manager_id: int, manager_data: Manager) -> 
     session.refresh(manager)
     return manager
 
-def delete_manager(session: Session, manager_id: int) -> bool:
+def delete_manager(session: Session, manager_id: int, current_account: Account) -> bool:
     manager = session.get(Manager, manager_id)
     if not manager:
         raise HTTPException(status_code=404, detail="Manager not found")
+    if manager.account_id != current_account.id:
+        raise HTTPException(status_code=403, detail="Not authorized to perform this action")
 
     session.delete(manager)
     session.commit()
