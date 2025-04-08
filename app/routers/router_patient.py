@@ -3,7 +3,7 @@ from sqlmodel import Session
 from app.models.model_tables import Account, Patient
 from app.schemas.schema_patient import PatientSchema
 from app.dependencies import get_session, get_current_account
-from app.crud.crud_patient import create_patient, read_patient_by_id, update_patient, delete_patient
+from app.crud.crud_patient import create_patient, read_patient, update_patient, delete_patient
 from typing import Annotated
 
 router = APIRouter(responses={400: {"description": "Bad Request", "content": {"application/json": {"example": {"detail": "string"}}}},
@@ -22,25 +22,18 @@ def create_patient_route(current_account: Annotated[Account, Depends(get_current
         raise HTTPException(status_code=500, detail="Creation failed on database") # pragma: no cover (security measure) 
 
 @router.get("/", response_model=Patient)
-def read_patient_route(
-    current_account: Annotated[Account, Depends(get_current_account)],
-    session: Annotated[Session, Depends(get_session)]
-) -> Patient:
+def read_patient_route(current_account: Annotated[Account, Depends(get_current_account)], session: Annotated[Session, Depends(get_session)]) -> Patient:
     if not current_account or current_account.patient_id is None:
         raise HTTPException(status_code=404, detail="Patient not found")  # pragma: no cover (security measure)
-    return read_patient_by_id(session, current_account.patient_id)
+    return read_patient(session, current_account)
 
 @router.put("/", response_model=Patient)
-def update_patient_route(
-    current_account: Annotated[Account, Depends(get_current_account)],
-    patient: PatientSchema,
-    session: Annotated[Session, Depends(get_session)]
-) -> Patient:
+def update_patient_route(current_account: Annotated[Account, Depends(get_current_account)], patient: PatientSchema, session: Annotated[Session, Depends(get_session)]) -> Patient:
     if not current_account or current_account.patient_id is None:
         raise HTTPException(status_code=404, detail="Patient not found")  # pragma: no cover (security measure)
 
     patient_to_update = Patient(**patient.model_dump())
-    updated_patient = update_patient(session, current_account.patient_id, patient_to_update)
+    updated_patient = update_patient(session, current_account, patient_to_update)
 
     if not updated_patient:
         raise HTTPException(status_code=404, detail="Patient not found")  # pragma: no cover (security measure)
@@ -48,14 +41,11 @@ def update_patient_route(
     return updated_patient
 
 @router.delete("/", response_model=dict)
-def delete_patient_route(
-    current_account: Annotated[Account, Depends(get_current_account)],
-    session: Annotated[Session, Depends(get_session)]
-) -> dict:
+def delete_patient_route(current_account: Annotated[Account, Depends(get_current_account)], session: Annotated[Session, Depends(get_session)]) -> dict:
     if not current_account or current_account.patient_id is None:
         raise HTTPException(status_code=404, detail="Patient not found")  # pragma: no cover (security measure)
 
-    if not delete_patient(session, current_account.patient_id):
+    if not delete_patient(session, current_account):
         raise HTTPException(status_code=500, detail="Failed to delete patient")  # pragma: no cover (security measure)
 
     return {"detail": "Patient deleted successfully"}
