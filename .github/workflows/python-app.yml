@@ -50,3 +50,4 @@ jobs:
           DATABASE_NAME: postgres
           TOKEN_SECRET_KEY: secret
           TOKEN_ALGORITHM: HS256
+          PASSWORD_ALGORITHM: sha256_crypt
