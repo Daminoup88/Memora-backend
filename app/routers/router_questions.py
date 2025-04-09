@@ -39,18 +39,18 @@ def create_question_route(current_account: Annotated[Account, Depends(get_curren
 
 @router.get("/", response_model=List[QuestionRead])
 def read_questions_route(current_account: Annotated[Account, Depends(get_current_account)], manager_id: int, session: Session = Depends(get_session)) -> List[QuestionRead]:
-    return read_questions(session)
+    return read_questions(session, current_account, manager_id)
 
 @router.get("/{question_id}", response_model=QuestionRead)
 def read_question_by_id_route(current_account: Annotated[Account, Depends(get_current_account)], manager_id: int, question_id: int, session: Session = Depends(get_session)) -> QuestionRead:
-    return read_question_by_id(session, question_id)
+    return read_question_by_id(session, question_id, current_account, manager_id)
 
 @router.put("/{question_id}", response_model=QuestionRead)
 def update_question_route(current_account: Annotated[Account, Depends(get_current_account)], manager_id: int, question_id: int, question: QuestionUpdate, session: Session = Depends(get_session)) -> QuestionRead:
     question_data = Question(**question.model_dump())
-    return update_question(session, question_id, question_data)
+    return update_question(session, question_id, question_data, current_account, manager_id)
 
 @router.delete("/{question_id}", response_model=dict)
 def delete_question_route(current_account: Annotated[Account, Depends(get_current_account)], manager_id: int, question_id: int, session: Session = Depends(get_session)) -> dict:
-    delete_question(session, question_id)
+    delete_question(session, question_id, current_account, manager_id)
     return {"detail": "Question deleted successfully"}
