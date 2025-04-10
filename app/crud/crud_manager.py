@@ -17,11 +17,7 @@ def create_manager(session: Session, manager: Manager, current_account: Account)
     return True
 
 def read_managers(session: Session, current_account: Account) -> list[Manager]:
-    managers = session.exec(select(Manager).where(Manager.account_id == current_account.id)).all()
-    if not managers:
-        raise HTTPException(status_code=404, detail="No managers found")
-
-    return managers
+    return session.exec(select(Manager).where(Manager.account_id == current_account.id)).all()
 
 def read_manager_by_id(session: Session, manager_id: int, current_account: Account) -> Manager:
     manager = session.get(Manager, manager_id)

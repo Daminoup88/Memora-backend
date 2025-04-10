@@ -154,8 +154,8 @@ def test_read_manager_by_id_invalid_id_format(client: TestClient, token):
 
 def test_read_managers_empty(client: TestClient, token):
     response = client.get("/api/managers/", headers={"Authorization": f"Bearer {token}"})
-    assert response.status_code == 404
-    assert response.json()["detail"] == "No managers found"
+    assert response.status_code == 200
+    assert response.json() == []
 
 def test_update_manager(client: TestClient, session: Session, token, manager1, manager2):
     client.post("/api/managers/", json=manager1, headers={"Authorization": f"Bearer {token}"})
