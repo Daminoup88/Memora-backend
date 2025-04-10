@@ -1,4 +1,16 @@
 {
-    "question": "What is the capital of France?",
-    "answer": "Paris"
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "type": "object",
+    "properties": {
+        "question": {
+            "type": "string",
+            "description": "The text of the question"
+        },
+        "answer": {
+            "type": "string",
+            "description": "The correct answer to the question"
+        }
+    },
+    "required": ["question", "answer"],
+    "additionalProperties": false
 }

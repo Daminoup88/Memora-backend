@@ -1,0 +1,15 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "type": "object",
+    "properties": {
+        "ordered": {
+            "type": "array",
+            "items": {
+                "type": "string"
+            },
+            "description": "A list of items to be ordered chronologically"
+        }
+    },
+    "required": ["ordered"],
+    "additionalProperties": false
+}

@@ -1,4 +1,21 @@
 {
-    "question": "Paris is the capital of | and | is the capital of Spain.",
-    "answers": ["France", "Madrid"]
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "type": "object",
+    "properties": {
+        "question": {
+            "type": "string",
+            "description": "The text of the question with placeholders",
+            "pattern": "\\|.*?\\|",
+            "examples": ["Paris is the capital of |France| and |Madrid| is the capital of Spain."]
+        },
+        "answers": {
+            "type": "array",
+            "items": {
+                "type": "string"
+            },
+            "description": "The list of correct answers to fill the placeholders"
+        }
+    },
+    "required": ["question", "answers"],
+    "additionalProperties": false
 }
