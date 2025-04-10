@@ -39,7 +39,7 @@ def read_random():
     logger.debug(f"Generated random number: {r}")
     return {"random": r}
 
-app.include_router(router_account.router, prefix=f"{API_PREFIX}/accounts", tags=["users"])
+app.include_router(router_account.router, prefix=f"{API_PREFIX}/accounts", tags=["account"])
 app.include_router(router_auth.router, prefix=f"{API_PREFIX}/auth", tags=["auth"])
 app.include_router(router_patient.router, prefix=f"{API_PREFIX}/patients", tags=["patient"])
 app.include_router(router_manager.router, prefix=f"{API_PREFIX}/managers", tags=["manager"])

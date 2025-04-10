@@ -22,7 +22,7 @@ def create_manager_route(current_account: Annotated[Account, Depends(get_current
         raise HTTPException(status_code=500, detail="Creation failed on database") # pragma: no cover (security measure)
 
 @router.get("/", response_model=list[ManagerRead])
-def read_manager_route(current_account: Annotated[Account, Depends(get_current_account)], session: Annotated[Session, Depends(get_session)]) -> list[ManagerRead]:
+def read_managers_route(current_account: Annotated[Account, Depends(get_current_account)], session: Annotated[Session, Depends(get_session)]) -> list[ManagerRead]:
     managers = read_managers(session, current_account)
 
     managers_read = [ManagerRead(**manager.model_dump()) for manager in managers]

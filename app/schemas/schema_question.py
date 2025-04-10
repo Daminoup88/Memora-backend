@@ -5,7 +5,6 @@ class QuestionCreate(SQLModel):
     type: str
     category: str
     exercise: dict
-    created_by: int
 
 class QuestionRead(SQLModel):
     id: int
