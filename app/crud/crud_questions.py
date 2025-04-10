@@ -13,23 +13,23 @@ def create_question(session: Session, question: Question, current_account: Accou
     session.refresh(question)
     return question
 
-def read_questions(session: Session, current_account: Account, manager_id: int) -> list[Question]:
-    manager = session.get(Manager, manager_id)
-    if not manager:
-        raise HTTPException(status_code=404, detail="Manager not found")
-    if manager.account_id != current_account.id:
-        raise HTTPException(status_code=403, detail="Not authorized to perform this action")
-    return session.exec(select(Question)).all()
+def read_questions(session: Session, current_account: Account) -> list[Question]:
+    questions = session.exec(
+        select(Question).join(Manager, Question.created_by == Manager.id).where(
+            Manager.account_id == current_account.id
+        )
+    ).all()
+    return questions
 
-def read_question_by_id(session: Session, question_id: int, current_account: Account, manager_id: int) -> Question:
-    manager = session.get(Manager, manager_id)
-    if not manager:
-        raise HTTPException(status_code=404, detail="Manager not found")
-    if manager.account_id != current_account.id:
-        raise HTTPException(status_code=403, detail="Not authorized to perform this action")
+def read_question_by_id(session: Session, question_id: int, current_account: Account) -> Question:
     question = session.get(Question, question_id)
     if not question:
         raise HTTPException(status_code=404, detail="Question not found")
+    authorized_manager = session.exec(
+        select(Manager).where(Manager.id == question.created_by, Manager.account_id == current_account.id)
+    ).first()
+    if not authorized_manager:
+        raise HTTPException(status_code=403, detail="Not authorized to access this question")
     return question
 
 def update_question(session: Session, question_id: int, question_data: Question, current_account: Account, manager_id: int) -> Question:
@@ -41,6 +41,11 @@ def update_question(session: Session, question_id: int, question_data: Question,
     question = session.get(Question, question_id)
     if not question:
         raise HTTPException(status_code=404, detail="Question not found")
+    authorized_manager = session.exec(
+        select(Manager).where(Manager.id == question.created_by, Manager.account_id == current_account.id)
+    ).first()
+    if not authorized_manager:
+        raise HTTPException(status_code=403, detail="Not authorized to update this question")
 
     for key, value in question_data.model_dump().items():
         setattr(question, key, value)
@@ -49,15 +54,15 @@ def update_question(session: Session, question_id: int, question_data: Question,
     session.refresh(question)
     return question
 
-def delete_question(session: Session, question_id: int, current_account: Account, manager_id: int) -> bool:
-    manager = session.get(Manager, manager_id)
-    if not manager:
-        raise HTTPException(status_code=404, detail="Manager not found")
-    if manager.account_id != current_account.id:
-        raise HTTPException(status_code=403, detail="Not authorized to perform this action")
+def delete_question(session: Session, question_id: int, current_account: Account) -> bool:
     question = session.get(Question, question_id)
     if not question:
         raise HTTPException(status_code=404, detail="Question not found")
+    authorized_manager = session.exec(
+        select(Manager).where(Manager.id == question.created_by, Manager.account_id == current_account.id)
+    ).first()
+    if not authorized_manager:
+        raise HTTPException(status_code=403, detail="Not authorized to delete this question")
 
     session.delete(question)
     session.commit()
