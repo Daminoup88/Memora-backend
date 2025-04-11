@@ -33,6 +33,7 @@ def create_question_route(current_account: Annotated[Account, Depends(get_curren
 
     question_to_create = Question(**question.model_dump())
     question_to_create.created_by = manager.id
+    question_to_create.edited_by = manager.id
     return create_question(session, question_to_create, current_account, manager.id)
 
 @router.get("/", response_model=List[QuestionRead])
