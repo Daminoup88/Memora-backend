@@ -29,13 +29,13 @@ class Patient(BaseTable, table=True):
 
 
 class Account(BaseTable, table=True):
-    patient_id: Optional[int] = Field(default=None, foreign_key="patient.id", unique=True)
+    patient_id: Optional[int] = Field(default=None, foreign_key="patient.id", unique=True, ondelete="SET NULL")
     username: str = Field(unique=True)
     password_hash: str
 
 
 class Manager(BaseTable, table=True):
-    account_id: Optional[int] = Field(default=None, foreign_key="account.id")
+    account_id: int = Field(foreign_key="account.id", ondelete="CASCADE")
     firstname: str
     lastname: str
     email: str = Field(unique=True)
@@ -47,21 +47,24 @@ class Question(BaseTable, table=True):
     type: str
     category: str
     exercise: dict = Field(sa_type=JSON)
-    created_by: int = Field(foreign_key="manager.id")
-    edited_by: int = Field(foreign_key="manager.id")
+    account_id: int = Field(foreign_key="account.id", ondelete="CASCADE")
+    created_by: Optional[int] = Field(foreign_key="manager.id", nullable=True, ondelete="SET NULL")
+    edited_by: Optional[int] = Field(foreign_key="manager.id", nullable=True, ondelete="SET NULL")
 
 
 class Result(BaseTable, table=True):
     data: dict = Field(sa_type=JSON)
     is_correct: bool
+    question_id: int = Field(foreign_key="question.id", ondelete="CASCADE")
 
 
 class Quiz(BaseTable, table=True):
     patient_id: int = Field(foreign_key="patient.id")
+    question_id: int = Field(foreign_key="question.id", ondelete="CASCADE")
 
 
 class QuizQuestion(SQLModel, table=True):
-    question_id: int = Field(foreign_key="question.id", primary_key=True)
-    quiz_id: int = Field(foreign_key="quiz.id", primary_key=True)
-    result_id: int = Field(foreign_key="result.id")
+    question_id: int = Field(foreign_key="question.id", primary_key=True, ondelete="CASCADE")
+    quiz_id: int = Field(foreign_key="quiz.id", primary_key=True, ondelete="CASCADE")
+    result_id: int = Field(foreign_key="result.id", nullable=True, ondelete="SET NULL")
     box_number: int
