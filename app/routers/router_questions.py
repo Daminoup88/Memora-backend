@@ -21,7 +21,7 @@ for schema_file in os.listdir(schemas_dir):
 router = APIRouter()
 
 @router.post("/{manager_id}", response_model=QuestionRead)
-def create_question_route(current_account: Annotated[Account, Depends(get_current_account)], manager: Annotated[Manager, Depends(get_current_manager)], question: QuestionCreate, session: Annotated[Session, Depends(get_session)]) -> QuestionRead:
+def create_question_route(question: QuestionCreate, current_manager: Annotated[Manager, Depends(get_current_manager)], session: Annotated[Session, Depends(get_session)]) -> QuestionRead:
     schema = schemas.get(question.type)
     if not schema:
         raise HTTPException(status_code=400, detail=f"Unsupported question type: {question.type}")
@@ -32,24 +32,32 @@ def create_question_route(current_account: Annotated[Account, Depends(get_curren
         raise HTTPException(status_code=400, detail=f"Invalid exercise format for type '{question.type}': {e.message}")
 
     question_to_create = Question(**question.model_dump())
-    question_to_create.created_by = manager.id
-    question_to_create.edited_by = manager.id
-    return create_question(session, question_to_create, current_account, manager.id)
+    return create_question(session, question_to_create, current_manager)
 
 @router.get("/", response_model=List[QuestionRead])
 def read_questions_route(current_account: Annotated[Account, Depends(get_current_account)], session: Session = Depends(get_session)) -> List[QuestionRead]:
     return read_questions(session, current_account)
 
 @router.get("/{question_id}", response_model=QuestionRead)
-def read_question_by_id_route(current_account: Annotated[Account, Depends(get_current_account)], question_id: int, session: Session = Depends(get_session)) -> QuestionRead:
+def read_question_by_id_route(question_id: int, current_account: Annotated[Account, Depends(get_current_account)], session: Session = Depends(get_session)) -> QuestionRead:
     return read_question_by_id(session, question_id, current_account)
 
-@router.put("/{question_id}", response_model=QuestionRead)
-def update_question_route(current_account: Annotated[Account, Depends(get_current_account)], manager_id: int, question_id: int, question: QuestionUpdate, session: Session = Depends(get_session)) -> QuestionRead:
+@router.put("/{manager_id}", response_model=QuestionRead)
+def update_question_route(question: QuestionUpdate, current_manager: Annotated[Manager, Depends(get_current_manager)], current_account: Annotated[Account, Depends(get_current_account)], session: Session = Depends(get_session)) -> QuestionRead:
+    schema = schemas.get(question.type)
+    if not schema:
+        raise HTTPException(status_code=400, detail=f"Unsupported question type: {question.type}")
+
+    try:
+        validate(instance=question.exercise, schema=schema)
+    except ValidationError as e:
+        raise HTTPException(status_code=400, detail=f"Invalid exercise format for type '{question.type}': {e.message}")
+
     question_data = Question(**question.model_dump())
-    return update_question(session, question_id, question_data, current_account, manager_id)
+    print(question_data.model_dump())
+    return update_question(session, question_data, current_account, current_manager)
 
 @router.delete("/{question_id}", response_model=dict)
-def delete_question_route(current_account: Annotated[Account, Depends(get_current_account)], question_id: int, session: Session = Depends(get_session)) -> dict:
+def delete_question_route(question_id: int, current_account: Annotated[Account, Depends(get_current_account)], session: Session = Depends(get_session)) -> dict:
     delete_question(session, question_id, current_account)
     return {"detail": "Question deleted successfully"}

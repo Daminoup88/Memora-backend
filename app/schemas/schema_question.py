@@ -13,6 +13,11 @@ class QuestionRead(SQLModel):
     exercise: dict
     created_at: datetime
     updated_at: datetime
+    created_by: int | None = None
+    edited_by: int | None = None
 
 class QuestionUpdate(SQLModel):
-    pass
+    id: int
+    type: str
+    category: str
+    exercise: dict

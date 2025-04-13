@@ -13,7 +13,7 @@ router = APIRouter(responses={400: {"description": "Bad Request", "content": {"a
                               })
 
 @router.post("/", response_model=dict)
-def create_manager_route(current_account: Annotated[Account, Depends(get_current_account)], manager: ManagerCreate, session: Annotated[Session, Depends(get_session)]) -> dict:
+def create_manager_route(manager: ManagerCreate, current_account: Annotated[Account, Depends(get_current_account)], session: Annotated[Session, Depends(get_session)]) -> dict:
     manager_to_create = Manager(**manager.model_dump())
     is_manager_created = create_manager(session, manager_to_create, current_account)
     if is_manager_created:
@@ -34,7 +34,7 @@ def read_manager_by_id_route(current_manager: Annotated[Manager, Depends(get_cur
     return ManagerRead(**current_manager.model_dump())
 
 @router.put("/{manager_id}", response_model=ManagerRead)
-def update_manager_route(current_manager: Annotated[Manager, Depends(get_current_manager)], manager_change: ManagerChange, session: Annotated[Session, Depends(get_session)]) -> ManagerRead:
+def update_manager_route(manager_change: ManagerChange, current_manager: Annotated[Manager, Depends(get_current_manager)], session: Annotated[Session, Depends(get_session)]) -> ManagerRead:
     manager_to_update = Manager(**manager_change.model_dump())
     updated_manager = update_manager(session, manager_to_update, current_manager)
 

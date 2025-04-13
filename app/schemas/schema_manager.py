@@ -1,11 +1,13 @@
 from sqlmodel import SQLModel
-from datetime import date
+from datetime import datetime
 
 class ManagerRead(SQLModel):
     id: int
     firstname: str
     lastname: str
     relationship: str
+    created_at: datetime
+    updated_at: datetime
     #TODO pp_path: str | None = 
 
 class ManagerCreate(SQLModel):
