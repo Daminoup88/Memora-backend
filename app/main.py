@@ -1,5 +1,6 @@
 import random
 from fastapi import FastAPI
+from fastapi.routing import APIRoute
 from fastapi.middleware.cors import CORSMiddleware
 from sqlmodel import SQLModel
 from app.routers import router_account
@@ -13,9 +14,14 @@ from app.routers import router_manager, router_questions
 # Load tables to metadata
 from app.models.model_tables import Account, Manager, Patient, Question, Result, Quiz, QuizQuestion
 
+# Unique IDs for routes for frontend client generation
+# !!! All the routes must have unique names !!!
+def custom_generate_unique_id(route: APIRoute):
+    return route.name
+
 API_PREFIX = "/api"
 
-app = FastAPI()
+app = FastAPI(generate_unique_id_function=custom_generate_unique_id)
 
 app.add_middleware(
     CORSMiddleware,

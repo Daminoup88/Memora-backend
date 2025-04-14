@@ -54,7 +54,6 @@ def update_question_route(question: QuestionUpdate, current_manager: Annotated[M
         raise HTTPException(status_code=400, detail=f"Invalid exercise format for type '{question.type}': {e.message}")
 
     question_data = Question(**question.model_dump())
-    print(question_data.model_dump())
     return update_question(session, question_data, current_account, current_manager)
 
 @router.delete("/{question_id}", response_model=dict)
