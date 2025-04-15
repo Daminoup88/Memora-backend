@@ -68,3 +68,10 @@ class QuizQuestion(SQLModel, table=True):
     quiz_id: int = Field(foreign_key="quiz.id", primary_key=True, ondelete="CASCADE")
     result_id: int = Field(foreign_key="result.id", nullable=True, ondelete="SET NULL")
     box_number: int
+
+
+class DefaultQuestions(SQLModel, table=True):
+    id: Optional[int] = Field(default=None, primary_key=True)
+    type: str
+    category: str
+    exercise: dict = Field(sa_type=JSON)
