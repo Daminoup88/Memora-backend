@@ -16,8 +16,7 @@ class QuestionRead(SQLModel):
     created_by: int | None = None
     edited_by: int | None = None
 
-class QuestionUpdate(SQLModel):
-    id: int
+class QuestionUpdate(QuestionCreate):
     type: str
     category: str
     exercise: dict
