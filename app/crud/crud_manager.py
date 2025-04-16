@@ -2,7 +2,7 @@ from sqlmodel import Session, select
 from fastapi import HTTPException
 from app.models.model_tables import Account, Manager
 
-def create_manager(session: Session, manager: Manager, current_account: Account) -> bool:
+def create_manager(session: Session, manager: Manager, current_account: Account) -> Manager:
 
     # check if the email is already used
     email_check = session.exec(select(Manager).where(Manager.email == manager.email)).first()
@@ -14,7 +14,7 @@ def create_manager(session: Session, manager: Manager, current_account: Account)
     session.commit()
     session.refresh(manager)
 
-    return True
+    return manager
 
 def read_managers(session: Session, current_account: Account) -> list[Manager]:
     return session.exec(select(Manager).where(Manager.account_id == current_account.id)).all()

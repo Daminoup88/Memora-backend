@@ -56,14 +56,16 @@ def test_create_manager(client: TestClient, session: Session, token, manager1):
     response = client.post("/api/managers/", json=manager1, headers={"Authorization": f"Bearer {token}"})
     assert response.status_code == 200
     # Validate response schema (dict)
-    assert response.json() == {}
+    data = response.json()
+    assert "email" not in data
     # Check DB
     manager = session.exec(select(Manager).where(Manager.email == manager1["email"])).first()
     assert manager is not None
-    assert manager.firstname == manager1["firstname"]
-    assert manager.lastname == manager1["lastname"]
-    assert manager.relationship == manager1["relationship"]
+    assert manager.firstname == manager1["firstname"] == data["firstname"]
+    assert manager.lastname == manager1["lastname"] == data["lastname"]
+    assert manager.relationship == manager1["relationship"] == data["relationship"]
     assert manager.email == manager1["email"]
+    assert manager.id == data["id"]
 
 def test_create_manager_already_used_email(client: TestClient, session: Session, token, manager1):
     client.post("/api/managers/", json=manager1, headers={"Authorization": f"Bearer {token}"})

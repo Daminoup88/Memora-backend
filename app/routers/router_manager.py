@@ -12,14 +12,11 @@ router = APIRouter(responses={400: {"description": "Bad Request", "content": {"a
                               422: {"description": "Unprocessable Entity", "content": {"application/json": {"example": {"detail": "string"}}}}
                               })
 
-@router.post("/", response_model=dict)
-def create_manager_route(manager: ManagerCreate, current_account: Annotated[Account, Depends(get_current_account)], session: Annotated[Session, Depends(get_session)]) -> dict:
+@router.post("/", response_model=ManagerRead)
+def create_manager_route(manager: ManagerCreate, current_account: Annotated[Account, Depends(get_current_account)], session: Annotated[Session, Depends(get_session)]) -> ManagerRead:
     manager_to_create = Manager(**manager.model_dump())
-    is_manager_created = create_manager(session, manager_to_create, current_account)
-    if is_manager_created:
-        return {}
-    else:
-        raise HTTPException(status_code=500, detail="Creation failed on database") # pragma: no cover (security measure)
+    created_manager = create_manager(session, manager_to_create, current_account)
+    return ManagerRead(**created_manager.model_dump())
 
 @router.get("/", response_model=list[ManagerRead])
 def read_managers_route(current_account: Annotated[Account, Depends(get_current_account)], session: Annotated[Session, Depends(get_session)]) -> list[ManagerRead]:

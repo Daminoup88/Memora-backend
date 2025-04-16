@@ -96,14 +96,26 @@ class ExerciseChecker:
     def __call__(self, question: QuestionCreate | QuestionUpdate) -> QuestionCreate | QuestionUpdate:
         schema = self.schemas.get(question.type)
         if not schema:
-            raise HTTPException(status_code=400, detail=f"Unsupported question type: {question.type}")
+            raise HTTPException(status_code=400, detail=f"Unsupported exercise type: {question.type}")
 
         try:
             validate(instance=question.exercise, schema=schema)
+            self.additional_validation(question)
         except ValidationError as e:
             raise HTTPException(status_code=400, detail=f"Invalid exercise format for type '{question.type}': {e.message}")
         
         return question
+    
+    def additional_validation(self, question: QuestionCreate | QuestionUpdate) -> None:
+        if question.type == "missing_words":
+            num_words = len(question.exercise["answers"])
+            pipe_count = question.exercise["question"].count('|')
+            if pipe_count != 2 * num_words:
+                raise ValidationError(f"expected {num_words} words, but found {pipe_count // 2} pipe pairs")
+
+        if question.type == "match_elements":
+            if len(question.exercise["column1"]) != len(question.exercise["column2"]):
+                raise ValidationError(f"column1 and column2 must have the same length")
 
 exercise_checker = ExerciseChecker()
 
@@ -114,7 +126,9 @@ class QuestionChecker:
     def __init__(self):
         pass
 
-    def __call__(self, question_id: int, session: Annotated[Session, Depends(get_session)], current_account: Annotated[Account, Depends(get_current_account)]) -> Question:
+    def __call__(self, session: Annotated[Session, Depends(get_session)], current_account: Annotated[Account, Depends(get_current_account)], question_id: int | None = None) -> Question:
+        if question_id is None:
+            return None
         question = session.get(Question, question_id)
         if not question:
             raise HTTPException(status_code=404, detail="Question not found")

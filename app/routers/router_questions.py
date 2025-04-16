@@ -14,20 +14,20 @@ def create_question_route(question: Annotated[QuestionCreate, Depends(get_valida
     question_to_create = Question(**question.model_dump())
     return create_question(session, question_to_create, current_manager)
 
-@router.get("/", response_model=List[QuestionRead])
-def read_questions_route(current_account: Annotated[Account, Depends(get_current_account)], session: Session = Depends(get_session)) -> List[QuestionRead]:
+@router.get("/", response_model=List[QuestionRead] | QuestionRead)
+def read_questions_route(question: Annotated[Question, Depends(get_current_question)], current_account: Annotated[Account, Depends(get_current_account)], session: Session = Depends(get_session)) -> List[QuestionRead] | QuestionRead:
+    if question:
+        return QuestionRead(**question.model_dump())
     return read_questions(session, current_account)
-
-@router.get("/", response_model=QuestionRead)
-def read_question_by_id_route(question: Annotated[Question, Depends(get_current_question)]) -> QuestionRead:
-    return QuestionRead(**question.model_dump())
 
 @router.put("/", response_model=QuestionRead)
 def update_question_route(question: Annotated[QuestionUpdate, Depends(get_validated_question)], current_question: Annotated[Question, Depends(get_current_question)], current_manager: Annotated[Manager, Depends(get_current_manager)], session: Session = Depends(get_session)) -> QuestionRead:
+    if not current_question:
+        raise HTTPException(status_code=400, detail="question_id query parameter required")
     question_data = Question(**question.model_dump())
     return update_question(session, question_data, current_question, current_manager)
 
 @router.delete("/", response_model=dict)
-def delete_question_route(current_question: Annotated[Question, Depends(get_current_question)], current_account: Annotated[Account, Depends(get_current_account)], session: Session = Depends(get_session)) -> dict:
+def delete_question_route(current_question: Annotated[Question, Depends(get_current_question)], session: Session = Depends(get_session)) -> dict:
     delete_question(session, current_question)
     return {"detail": "Question deleted successfully"}
