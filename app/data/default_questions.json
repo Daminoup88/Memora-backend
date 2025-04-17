@@ -1,0 +1,19 @@
+[
+    {
+        "type": "mcq",
+        "category": "general",
+        "exercise": {
+            "question": "What is 2+2?",
+            "choices": ["3", "4", "5"],
+            "answer": "4"
+        }
+    },
+    {
+        "type": "missing_words",
+        "category": "language",
+        "exercise": {
+            "question": "The capital of France is |Paris|.",
+            "answers": ["Paris"]
+        }
+    }
+]
