@@ -60,7 +60,6 @@ class Result(BaseTable, table=True):
 
 class Quiz(BaseTable, table=True):
     patient_id: int = Field(foreign_key="patient.id")
-    question_id: int = Field(foreign_key="question.id", ondelete="CASCADE")
 
 
 class QuizQuestion(SQLModel, table=True):
