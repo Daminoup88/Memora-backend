@@ -4,3 +4,7 @@ from app.schemas.schema_question import QuestionRead
 
 class QuizzGet(SQLModel):
     questions: list[QuestionRead]
+    id: int
+
+class QuizzAnswered(SQLModel):
+    is_right: bool
