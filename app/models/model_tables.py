@@ -2,7 +2,7 @@ from datetime import date, datetime
 from typing import Optional
 from sqlmodel import Field, SQLModel
 from sqlalchemy.dialects.postgresql import JSON
-from sqlalchemy import DateTime, text
+from sqlalchemy import DateTime, text, Interval
 
 class BaseTable(SQLModel):
     id: Optional[int] = Field(default=None, primary_key=True)
@@ -55,7 +55,6 @@ class Question(BaseTable, table=True):
 class Result(BaseTable, table=True):
     data: dict = Field(sa_type=JSON)
     is_correct: bool
-    question_id: int = Field(foreign_key="question.id", ondelete="CASCADE")
 
 
 class Quiz(BaseTable, table=True):
@@ -65,8 +64,8 @@ class Quiz(BaseTable, table=True):
 class QuizQuestion(SQLModel, table=True):
     question_id: int = Field(foreign_key="question.id", primary_key=True, ondelete="CASCADE")
     quiz_id: int = Field(foreign_key="quiz.id", primary_key=True, ondelete="CASCADE")
-    result_id: int = Field(foreign_key="result.id", nullable=True, ondelete="SET NULL")
-    box_number: int
+    result_id: int = Field(foreign_key="result.id", nullable=True, default=None, ondelete="SET NULL")
+    box_number: Optional[int] = Field(default=None, nullable=True)
 
 
 class DefaultQuestions(SQLModel, table=True):
@@ -74,3 +73,11 @@ class DefaultQuestions(SQLModel, table=True):
     type: str
     category: str
     exercise: dict = Field(sa_type=JSON)
+
+
+class LeitnerParameters(SQLModel, table=True):
+    box_number: int = Field(primary_key=True)
+    leitner_delay: str = Field(sa_type=Interval)
+
+    class Config:
+        arbitrary_types_allowed = True

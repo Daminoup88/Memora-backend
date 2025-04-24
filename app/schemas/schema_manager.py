@@ -16,7 +16,7 @@ class ManagerCreate(SQLModel):
     relationship: str
     email: str
 
-class ManagerChange(SQLModel):
+class ManagerUpdate(SQLModel):
     firstname: str
     lastname: str
     relationship: str

@@ -14,7 +14,7 @@ def create_question_route(question: Annotated[QuestionCreate, Depends(get_valida
     question_to_create = Question(**question.model_dump())
     return create_question(session, question_to_create, current_manager)
 
-@router.get("/", response_model=List[QuestionRead] | QuestionRead)
+@router.get("/", response_model=List[QuestionRead] | QuestionRead, description="Returns all questions or a specific question if question_id query parameter is provided.")
 def read_questions_route(question: Annotated[Question, Depends(get_current_question)], current_account: Annotated[Account, Depends(get_current_account)], session: Session = Depends(get_session)) -> List[QuestionRead] | QuestionRead:
     if question:
         return QuestionRead(**question.model_dump())

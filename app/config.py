@@ -23,4 +23,4 @@ logger.setLevel(logging.DEBUG)
 
 pwd_context = CryptContext(schemes=[settings.password_algorithm], deprecated="auto")
 
-json_schema_dir = "json_schema/questions"
+json_schema_dir = "json_schema"

@@ -12,14 +12,10 @@ router = APIRouter(responses={400: {"description": "Bad Request", "content": {"a
                               422: {"description": "Unprocessable Entity", "content": {"application/json": {"example": {"detail": "string"}}}}
                               })
 
-@router.post("/", response_model=dict)
+@router.post("/", response_model=Patient)
 def create_patient_route(current_account: Annotated[Account, Depends(get_current_account)], patient: PatientSchema, session: Annotated[Session, Depends(get_session)]) -> dict:
     patient_to_create = Patient(**patient.model_dump())
-    is_patient_created = create_patient(session, patient_to_create, current_account)
-    if is_patient_created:
-        return {}
-    else:
-        raise HTTPException(status_code=500, detail="Creation failed on database") # pragma: no cover (security measure) 
+    return create_patient(session, patient_to_create, current_account)
 
 @router.get("/", response_model=Patient)
 def read_patient_route(current_account: Annotated[Account, Depends(get_current_account)], session: Annotated[Session, Depends(get_session)]) -> Patient:

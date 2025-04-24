@@ -15,7 +15,7 @@ def create_patient(session: Session, patient: Patient, current_account: Account)
     session.commit()
     session.refresh(current_account)
 
-    return True
+    return patient
 
 def read_patient(session: Session, current_account: Account) -> Patient:
     patient = session.get(Patient, current_account.patient_id)

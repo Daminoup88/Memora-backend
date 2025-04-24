@@ -1,7 +1,7 @@
 from fastapi import APIRouter, HTTPException, Depends
 from sqlmodel import Session
 from app.models.model_tables import Account, Manager
-from app.schemas.schema_manager import ManagerRead, ManagerCreate, ManagerChange
+from app.schemas.schema_manager import ManagerRead, ManagerCreate, ManagerUpdate
 from app.dependencies import get_session, get_current_account, get_current_manager
 from app.crud.crud_manager import create_manager, update_manager, delete_manager, read_managers
 from typing import Annotated
@@ -31,7 +31,7 @@ def read_manager_by_id_route(current_manager: Annotated[Manager, Depends(get_cur
     return ManagerRead(**current_manager.model_dump())
 
 @router.put("/{manager_id}", response_model=ManagerRead)
-def update_manager_route(manager_change: ManagerChange, current_manager: Annotated[Manager, Depends(get_current_manager)], session: Annotated[Session, Depends(get_session)]) -> ManagerRead:
+def update_manager_route(manager_change: ManagerUpdate, current_manager: Annotated[Manager, Depends(get_current_manager)], session: Annotated[Session, Depends(get_session)]) -> ManagerRead:
     manager_to_update = Manager(**manager_change.model_dump())
     updated_manager = update_manager(session, manager_to_update, current_manager)
 

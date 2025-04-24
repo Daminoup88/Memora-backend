@@ -2,9 +2,10 @@ from sqlmodel import SQLModel
 from datetime import datetime
 from app.schemas.schema_question import QuestionRead
 
-class QuizzGet(SQLModel):
-    questions: list[QuestionRead]
+class QuizRead(SQLModel):
     id: int
+    questions: list[QuestionRead]
 
-class QuizzAnswered(SQLModel):
-    is_right: bool
+class ResultRead(SQLModel):
+    data: dict
+    is_correct: bool

@@ -1,7 +1,8 @@
 from sqlmodel import Session, create_engine
+from sqlalchemy import select
 from app.database import database
 from typing import Generator
-from app.models.model_tables import Account, Manager, Question
+from app.models.model_tables import Account, Manager, Question, Quiz, Result, QuizQuestion
 from app.crud.crud_account import read_account_by_id, read_account_by_username
 from app.config import pwd_context, settings, json_schema_dir
 from fastapi.security import OAuth2PasswordBearer
@@ -13,6 +14,7 @@ import os
 import json
 from jsonschema import validate, ValidationError
 from app.schemas.schema_question import QuestionCreate, QuestionUpdate
+from app.schemas.schema_quiz import ResultRead
 
 # Database
 engine = create_engine(database.DATABASE_URL)
@@ -84,28 +86,34 @@ def get_current_manager(manager: Annotated[Manager, Depends(manager_checker)]) -
 
 # Question checks
 
-class ExerciseChecker:
-    def __init__(self):
+class CheckerBase:
+    def __init__(self, schema_dir: str):
         self.schemas = {}
-        for schema_file in os.listdir(json_schema_dir):
+        self.schema_dir = schema_dir
+        for schema_file in os.listdir(self.schema_dir):
             if schema_file.endswith(".json"):
                 schema_name = schema_file.split(".")[0]
-                with open(os.path.join(json_schema_dir, schema_file), "r") as file:
+                with open(os.path.join(self.schema_dir, schema_file), "r") as file:
                     self.schemas[schema_name] = json.load(file)
 
-    def __call__(self, question: QuestionCreate | QuestionUpdate) -> QuestionCreate | QuestionUpdate:
-        schema = self.schemas.get(question.type)
+    def validate_schema(self, instance: dict, schema_type: str):
+        schema = self.schemas.get(schema_type)
         if not schema:
-            raise HTTPException(status_code=400, detail=f"Unsupported exercise type: {question.type}")
+            raise HTTPException(status_code=400, detail=f"Unsupported type: {schema_type}")
+        validate(instance=instance, schema=schema)
 
+class ExerciseChecker(CheckerBase):
+    def __init__(self):
+        super().__init__(os.path.join(json_schema_dir, "questions"))
+
+    def __call__(self, question: QuestionCreate | QuestionUpdate) -> QuestionCreate | QuestionUpdate:
         try:
-            validate(instance=question.exercise, schema=schema)
+            self.validate_schema(question.exercise, question.type)
             self.additional_validation(question)
         except ValidationError as e:
-            raise HTTPException(status_code=400, detail=f"Invalid exercise format for type '{question.type}': {e.message}")
-        
+            raise HTTPException(status_code=400, detail=f"Invalid format for type '{question.type}': {e.message}")
         return question
-    
+
     def additional_validation(self, question: QuestionCreate | QuestionUpdate) -> None:
         if question.type == "missing_words":
             num_words = len(question.exercise["answers"])
@@ -140,3 +148,64 @@ question_checker = QuestionChecker()
     
 def get_current_question(question: Annotated[Question, Depends(question_checker)]) -> Question:
     return question
+
+class QuizChecker:
+    def __init__(self):
+        pass
+
+    def __call__(self, session: Annotated[Session, Depends(get_session)], current_account: Annotated[Account, Depends(get_current_account)], quiz_id: int) -> Quiz:
+        quiz = session.get(Quiz, quiz_id)
+        if not quiz:
+            raise HTTPException(status_code=404, detail="Quiz not found")
+        if quiz.patient_id != current_account.patient_id:
+            raise HTTPException(status_code=403, detail="Not authorized to perform this action")
+        return quiz
+    
+quiz_checker = QuizChecker()
+
+def get_current_quiz(quiz: Annotated[Quiz, Depends(quiz_checker)]) -> Quiz:
+    return quiz
+
+class AnswerChecker(CheckerBase):
+    def __init__(self):
+        super().__init__(os.path.join(json_schema_dir, "answers"))
+
+    def __call__(self, answer: ResultRead, current_question: Annotated[Question, Depends(get_current_question)], current_quiz: Annotated[Quiz, Depends(get_current_quiz)], session: Annotated[Session, Depends(get_session)]) -> Result:
+        quiz_question = session.exec(
+            select(QuizQuestion).where(QuizQuestion.question_id == current_question.id, QuizQuestion.quiz_id == current_quiz.id)
+        ).first()
+        if not quiz_question:
+            raise HTTPException(status_code=404, detail=f"The question {current_question.id} is not in the quiz {current_quiz.id}")
+        if quiz_question.result_id is not None:
+            raise HTTPException(status_code=400, detail="Answer already submitted for this question in the quiz")
+
+        try:
+            self.validate_schema(answer.data, current_question.type)
+            self.additional_validation(answer, current_question)
+        except ValidationError as e:
+            raise HTTPException(status_code=400, detail=f"Invalid format for type '{answer.get('type')}': {e.message}")
+        self.answer_check(answer, current_question)
+        result = Result(
+            data=answer.data,
+            is_correct=answer.is_correct
+        )
+        return result
+    
+    def additional_validation(self, answer: ResultRead, question: Question) -> None:
+        if question.type == "missing_words":
+            num_words = len(answer.data["answers"])
+            pipe_count = question.exercise["question"].count('|')
+            if pipe_count != 2 * num_words:
+                raise ValidationError(f"expected {num_words} words, but found {pipe_count // 2} pipe pairs")
+
+        if question.type == "match_elements":
+            if len(answer.data["column1"]) != len(answer.data["column2"]):
+                raise ValidationError(f"column1 and column2 must have the same length")
+            
+    def answer_check(self, answer: ResultRead, question: Question) -> bool:
+        pass
+
+answer_checker = AnswerChecker()
+
+def get_validated_answer(answer: Annotated[Result, Depends(answer_checker)]) -> Result:
+    return answer

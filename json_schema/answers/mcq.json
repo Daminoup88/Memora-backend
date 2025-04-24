@@ -7,6 +7,6 @@
             "description": "The answer of the patient to the question"
         }
     },
-    "required": ["choices"],
+    "required": ["choice"],
     "additionalProperties": false
 }

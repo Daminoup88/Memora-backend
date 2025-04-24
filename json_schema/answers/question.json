@@ -7,6 +7,6 @@
             "description": "The correct answer to the question"
         }
     },
-    "required": ["question", "answer"],
+    "required": ["answer"],
     "additionalProperties": false
 }
