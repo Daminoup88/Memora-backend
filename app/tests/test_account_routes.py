@@ -16,6 +16,7 @@ def test_create_account(client: TestClient, session: Session):
     assert data["username"] == ACCOUNT1["username"]
     assert AccountRead(**data)
     assert "password" not in data
+    assert "id" not in data  # Ensure 'id' is not in the response
     # query database
     account = session.exec(select(Account).where(Account.username == ACCOUNT1["username"])).first()
     # check database
@@ -31,6 +32,7 @@ def test_create_account_duplicate_username(client: TestClient, session: Session)
     assert data["username"] == ACCOUNT1["username"]
     assert AccountRead(**data)
     assert "password" not in data
+    assert "id" not in data  # Ensure 'id' is not in the response
     # create account with same username
     response = client.post("/api/accounts/", json=ACCOUNT1)
     # check response
@@ -63,7 +65,7 @@ def test_create_account_empty_username(client: TestClient, session: Session):
     assert response.status_code == 422
     data = response.json()
     assert data["detail"][0]["msg"].startswith("String should have at least 1 character")
-    # check database (no account created)
+        # check database (no account created)
     assert session.exec(select(Account)).all() == []
 
 def test_create_account_empty_password(client: TestClient, session: Session):
@@ -74,7 +76,7 @@ def test_create_account_empty_password(client: TestClient, session: Session):
     assert response.status_code == 422
     data = response.json()
     assert data["detail"][0]["msg"].startswith("String should have at least 1 character")
-    # check database (no account created)
+        # check database (no account created)
     assert session.exec(select(Account)).all() == []
 
 def test_read_account(client: TestClient, session: Session):
@@ -92,6 +94,7 @@ def test_read_account(client: TestClient, session: Session):
     assert data["username"] == account_hashed["username"]
     assert AccountRead(**data)
     assert "password_hash" not in data
+    assert "id" not in data  # Ensure 'id' is not in the response
 
 def test_read_account_not_found(client: TestClient):
     # create fake access token
@@ -152,9 +155,9 @@ def test_update_account(client: TestClient, session: Session):
     data = response.json()
     assert data["username"] == updated_account["username"]
     assert "password_hash" not in data
+    assert "id" not in data  # Ensure 'id' is not in the response
     # check database
     account = session.get(Account, account_id)
-    assert account.id == data["id"] 
     assert account.username == updated_account["username"]
     assert account.password_hash != updated_account["password"]
     assert AccountRead(**data)
@@ -203,7 +206,7 @@ def test_update_account_invalid_body(client: TestClient, session: Session):
     assert len(data["detail"]) == 2
     assert data["detail"][0]["loc"] == ["body", "username"] and data["detail"][0]["msg"] == "Field required"
     assert data["detail"][1]["loc"] == ["body", "password"] and data["detail"][1]["msg"] == "Field required"
-    # check database
+        # check database
     account = session.get(Account, account_id)
     assert account.username == account_hashed["username"]
     assert account.password_hash == account_hashed["password_hash"]
@@ -229,7 +232,7 @@ def test_update_account_duplicate_username(client: TestClient, session: Session)
     assert response.status_code == 400
     data = response.json()
     assert data["detail"] == "Username already registered"
-    # check database
+        # check database
     account1 = session.get(Account, account1_id)
     account2 = session.get(Account, account2_id)
     assert account1.username == ACCOUNT1["username"]
@@ -251,7 +254,7 @@ def test_update_account_not_logged_in(client: TestClient, session: Session):
     assert response.status_code == 401
     data = response.json()
     assert data["detail"] == "Not authenticated"
-    # check database
+        # check database
     account = session.get(Account, account_id)
     assert account.username == ACCOUNT1["username"]
     assert verify_password(ACCOUNT1["password"], account.password_hash)
@@ -274,7 +277,7 @@ def test_update_account_empty_username(client: TestClient, session: Session):
     assert response.status_code == 422
     data = response.json()
     assert data["detail"][0]["msg"].startswith("String should have at least 1 character")
-    # check database
+        # check database
     account = session.get(Account, account_id)
     assert account.username == ACCOUNT1["username"]
     assert verify_password(ACCOUNT1["password"], account.password_hash)
@@ -297,7 +300,7 @@ def test_update_account_empty_password(client: TestClient, session: Session):
     assert response.status_code == 422
     data = response.json()
     assert data["detail"][0]["msg"].startswith("String should have at least 1 character")
-    # check database
+        # check database
     account = session.get(Account, account_id)
     assert account.username == ACCOUNT1["username"]
     assert verify_password(ACCOUNT1["password"], account.password_hash)
@@ -316,7 +319,7 @@ def test_delete_account(client: TestClient, session: Session):
     assert response.status_code == 200
     data = response.json()
     assert data == {"detail": "Account deleted successfully"}
-    # check database
+        # check database
     account = session.get(Account, account_id)
     assert account is None
     

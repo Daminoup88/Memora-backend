@@ -1,7 +1,7 @@
 from fastapi import APIRouter, HTTPException, Depends
 from sqlmodel import Session
 from app.models.model_tables import Account, Patient
-from app.schemas.schema_patient import PatientSchema
+from app.schemas.schema_patient import PatientCreate, PatientRead
 from app.dependencies import get_session, get_current_account
 from app.crud.crud_patient import create_patient, read_patient, update_patient, delete_patient
 from typing import Annotated
@@ -12,19 +12,19 @@ router = APIRouter(responses={400: {"description": "Bad Request", "content": {"a
                               422: {"description": "Unprocessable Entity", "content": {"application/json": {"example": {"detail": "string"}}}}
                               })
 
-@router.post("/", response_model=Patient)
-def create_patient_route(current_account: Annotated[Account, Depends(get_current_account)], patient: PatientSchema, session: Annotated[Session, Depends(get_session)]) -> dict:
+@router.post("/", response_model=PatientRead)
+def create_patient_route(current_account: Annotated[Account, Depends(get_current_account)], patient: PatientCreate, session: Annotated[Session, Depends(get_session)]) -> PatientRead:
     patient_to_create = Patient(**patient.model_dump())
     return create_patient(session, patient_to_create, current_account)
 
-@router.get("/", response_model=Patient)
-def read_patient_route(current_account: Annotated[Account, Depends(get_current_account)], session: Annotated[Session, Depends(get_session)]) -> Patient:
+@router.get("/", response_model=PatientRead)
+def read_patient_route(current_account: Annotated[Account, Depends(get_current_account)], session: Annotated[Session, Depends(get_session)]) -> PatientRead:
     if not current_account or current_account.patient_id is None:
         raise HTTPException(status_code=404, detail="Patient not found")  # pragma: no cover (security measure)
     return read_patient(session, current_account)
 
-@router.put("/", response_model=Patient)
-def update_patient_route(current_account: Annotated[Account, Depends(get_current_account)], patient: PatientSchema, session: Annotated[Session, Depends(get_session)]) -> Patient:
+@router.put("/", response_model=PatientRead)
+def update_patient_route(current_account: Annotated[Account, Depends(get_current_account)], patient: PatientCreate, session: Annotated[Session, Depends(get_session)]) -> PatientRead:
     if not current_account or current_account.patient_id is None:
         raise HTTPException(status_code=404, detail="Patient not found")  # pragma: no cover (security measure)
 

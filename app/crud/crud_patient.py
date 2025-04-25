@@ -2,7 +2,7 @@ from sqlmodel import Session, select
 from fastapi import HTTPException
 from app.models.model_tables import Account, Patient
 
-def create_patient(session: Session, patient: Patient, current_account: Account) -> bool:
+def create_patient(session: Session, patient: Patient, current_account: Account) -> Patient:
     if current_account.patient_id is not None:
         raise HTTPException(status_code=400, detail="Patient already registered")
     

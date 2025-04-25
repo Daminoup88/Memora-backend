@@ -31,7 +31,7 @@ def update_account_route(current_account: Annotated[Account, Depends(get_current
     updated_account = update_account(session, current_account, account_to_update)
     if not updated_account:
         raise HTTPException(status_code=404, detail="Account not found") # pragma: no cover (security measure)
-    return updated_account
+    return AccountRead(**updated_account.model_dump())
 
 @router.delete("/", response_model=dict)
 def delete_account_route(current_account: Annotated[Account, Depends(get_current_account)], session: Annotated[Session, Depends(get_session)]) -> dict:

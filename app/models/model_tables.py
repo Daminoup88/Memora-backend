@@ -3,6 +3,7 @@ from typing import Optional
 from sqlmodel import Field, SQLModel
 from sqlalchemy.dialects.postgresql import JSON
 from sqlalchemy import DateTime, text, Interval
+from pydantic import ConfigDict
 
 class BaseTable(SQLModel):
     id: Optional[int] = Field(default=None, primary_key=True)
@@ -79,5 +80,4 @@ class LeitnerParameters(SQLModel, table=True):
     box_number: int = Field(primary_key=True)
     leitner_delay: str = Field(sa_type=Interval)
 
-    class Config:
-        arbitrary_types_allowed = True
+    model_config = ConfigDict(arbitrary_types_allowed=True)

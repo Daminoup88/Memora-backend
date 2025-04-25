@@ -4,7 +4,7 @@ from app.models.model_tables import Account, Patient
 from app.dependencies import get_password_hash, create_access_token, verify_password
 import datetime
 
-PATIENT1 = {"firstname": "John", "lastname": "Doe", "birthday": "2000-01-01T00:00:00"}
+PATIENT1 = {"firstname": "John", "lastname": "Doe", "birthday": "2000-01-01"}
 ACCOUNT1 = {"username": "patientowner", "password": "pwd123"}
 
 def _create_account_and_get_token(client: TestClient, session: Session):
@@ -45,6 +45,11 @@ def test_create_patient(client: TestClient, session: Session):
     token = _create_account_and_get_token(client, session)
     response = client.post("/api/patients/", json=PATIENT1, headers={"Authorization": f"Bearer {token}"})
     assert response.status_code == 200
+    data = response.json()
+    assert "id" not in data  # Ensure 'id' is not in the returned data
+    assert data["firstname"] == PATIENT1["firstname"]
+    assert data["lastname"] == PATIENT1["lastname"]
+    assert data["birthday"] == PATIENT1["birthday"]
     # Check DB
     account = session.exec(select(Account).where(Account.username == ACCOUNT1["username"])).first()
     patient = session.exec(select(Patient).where(Patient.firstname == PATIENT1["firstname"])).first()
@@ -92,8 +97,10 @@ def test_read_patient(client: TestClient, session: Session):
     response = client.get("/api/patients/", headers={"Authorization": f"Bearer {token}"})
     assert response.status_code == 200
     data = response.json()
+    assert "id" not in data  # Ensure 'id' is not in the returned data
     assert data["firstname"] == PATIENT1["firstname"]
     assert data["lastname"] == PATIENT1["lastname"]
+    assert data["birthday"] == PATIENT1["birthday"]
 
 def test_read_patient_not_found(client: TestClient, session: Session):
     token = _create_account_and_get_token(client, session)
@@ -115,8 +122,10 @@ def test_update_patient(client: TestClient, session: Session):
     response = client.put("/api/patients/", json=updated_data, headers={"Authorization": f"Bearer {token}"})
     assert response.status_code == 200
     data = response.json()
+    assert "id" not in data  # Ensure 'id' is not in the returned data
     assert data["firstname"] == "Johnny"
     assert data["lastname"] == "Updated"
+    assert data["birthday"] == "2000-01-01"
 
 def test_update_patient_invalid_data(client: TestClient, session: Session):
     token = _create_account_and_get_token(client, session)

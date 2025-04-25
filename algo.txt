@@ -9,11 +9,6 @@ puis les questions présentes dans quizquestion (on regarde uniquement la derni�
 Pour chaque question, on vérifie que la dernière réponse à la question est antérieure au délai du numéro de boite en cours,
 et on classe de la question la plus importante avec le numéro de boite le plus faible à la moins importante avec un numéro de boite élevé
 
-SELECT q.* FROM Question q 
-JOIN QuizQuestion qq ON q.id = qq.question_id
-JOIN Account a ON q.account_id = a.id
-WHERE qq.id = (SELECT MAX(id) FROM QuizQuestion WHERE question_id = q.id)
-
 SELECT q.* FROM Question q
 JOIN Account a ON q.account_id = a.id
 JOIN QuizQuestion qq ON q.id = qq.question_id
