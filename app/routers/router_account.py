@@ -1,9 +1,11 @@
 from fastapi import APIRouter, HTTPException, Depends
 from sqlmodel import Session
-from app.models.model_tables import Account
+from app.models.model_tables import Account, Patient
 from app.schemas.schema_account import AccountRead, AccountCreate
+from app.schemas.schema_patient import PatientCreate
 from app.dependencies import get_session, get_password_hash, get_current_account
 from app.crud.crud_account import create_account, read_account_by_id, update_account, delete_account
+from app.crud.crud_patient import create_patient
 from typing import Annotated
 
 router = APIRouter(responses={400: {"description": "Bad Request", "content": {"application/json": {"example": {"detail": "string"}}}},
@@ -17,6 +19,16 @@ def create_account_route(account: AccountCreate, session: Annotated[Session, Dep
     account_to_create = Account(**account.model_dump())
     account_to_create.password_hash = get_password_hash(account.password)
     return create_account(session, account_to_create)
+
+@router.post("/create_account_and_patient/", response_model=AccountRead)
+def create_account_and_patient_route(account: AccountCreate, patient: PatientCreate, session: Annotated[Session, Depends(get_session)]) -> AccountRead:
+    created_account = create_account_route(account, session)
+    if not created_account:
+        raise HTTPException(status_code=400, detail="Account creation failed")
+    created_patient = create_patient(session, Patient(**patient.model_dump()), created_account)
+    if not created_patient:
+        raise HTTPException(status_code=400, detail="Patient creation failed")
+    return AccountRead(**created_account.model_dump())
 
 @router.get("/", response_model=AccountRead)
 def read_account_route(current_account: Annotated[Account, Depends(get_current_account)], session: Annotated[Session, Depends(get_session)]) -> AccountRead:
