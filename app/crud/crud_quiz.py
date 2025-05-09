@@ -28,27 +28,32 @@ def create_leitner_quiz(number_of_questions: int, current_account: Account, sess
                 select(QuizQuestion.question_id)
             )
         )
-    ).all()
+    ).scalars().all()
 
-    # SELECT q.* FROM Question q
-    # WHERE q.account_id = :account_id
-    # (eventually) AND q.id NOT IN (SELECT question_id FROM QuizQuestion WHERE result_id IS NULL)
+    # SELECT q.*
+    # FROM Question q
     # JOIN QuizQuestion qq ON q.id = qq.question_id
-    # WHERE qq.id = (SELECT MAX(id) FROM QuizQuestion WHERE question_id = q.id)
-    # JOIN LeitnerParameters lp ON lp.box_number = qq.box_number
-    # JOIN Quiz qz ON qz.id = qq.quiz_id AND qz.created_at < DATEADD(DAY, -lp.leitner_delay, GETDATE())
-    # ORDER BY lp.box_number ASC, qq.last_answer_date ASC
-    # LIMIT :number_of_questions
+    # JOIN (
+    #     SELECT question_id, MAX(quiz_id) as max_quiz_id
+    #     FROM QuizQuestion
+    #     GROUP BY question_id
+    # ) latest_qq ON qq.quiz_id = latest_qq.max_quiz_id AND qq.question_id = latest_qq.question_id
+    # JOIN LeitnerParameters lp ON qq.box_number = lp.box_number
+    # JOIN Quiz qz ON qz.id = qq.quiz_id
+    # WHERE q.account_id = 9
+    # AND qz.created_at < (CURRENT_TIMESTAMP - lp.leitner_delay)
+    # ORDER BY qq.box_number ASC
+    # LIMIT 10;
     leitner_questions = session.exec(
         select(Question).where(
             Question.account_id == current_account.id
         ).join(
             QuizQuestion, QuizQuestion.question_id == Question.id
         ).where(
-            QuizQuestion.id == (
-                select(func.max(QuizQuestion.id)).where(
+            QuizQuestion.quiz_id == (
+                select(func.max(QuizQuestion.quiz_id)).where(
                     QuizQuestion.question_id == Question.id
-                )
+                ).correlate(Question).scalar_subquery()
             )
         ).join(
             LeitnerParameters, QuizQuestion.box_number == LeitnerParameters.box_number
@@ -58,8 +63,8 @@ def create_leitner_quiz(number_of_questions: int, current_account: Account, sess
             Quiz.created_at < func.now() - LeitnerParameters.leitner_delay
         ).order_by(
             QuizQuestion.box_number.asc()
-        )
-    ).limit(number_of_questions - len(never_answered)).all()
+        ).limit(number_of_questions - len(never_answered))
+    ).scalars().all()
     
     questions = never_answered + leitner_questions
 
@@ -75,18 +80,33 @@ def create_leitner_quiz(number_of_questions: int, current_account: Account, sess
             quiz_id=new_quiz.id,
             question_id=question.id
         )
+        if quiz_question.box_number is None:
+            quiz_question.box_number = 1
         questions_read.append(QuestionRead(**question.model_dump()))
         session.add(quiz_question)
     session.commit()
 
     return QuizRead(id=new_quiz.id, questions=questions_read)
 
+def read_quiz_by_id(current_quiz: Quiz, session: Session) -> QuizRead:
+    # SELECT * FROM Question q WHERE q.id IN (SELECT question_id FROM QuizQuestion qq WHERE qq.quiz_id = :quiz_id)
+    questions = session.exec(
+        select(Question).where(
+            Question.id.in_(
+                select(QuizQuestion.question_id).where(
+                    QuizQuestion.quiz_id == current_quiz.id
+                )
+            )
+        )
+    ).scalars().all()
+
+    return QuizRead(id=current_quiz.id, questions=questions)
 
 def save_answer(answer: Result, current_quiz: Quiz, question: Question, session: Session) -> ResultRead:
     # SELECT * FROM QuizQuestion qq WHERE qq.question_id = :question_id AND qq.quiz_id = :quiz_id
     quiz_question = session.exec(
         select(QuizQuestion).where(QuizQuestion.question_id == question.id, QuizQuestion.quiz_id == current_quiz.id)
-    ).first()
+    ).scalars().first()
 
     session.add(answer)
     session.commit()
@@ -94,7 +114,7 @@ def save_answer(answer: Result, current_quiz: Quiz, question: Question, session:
     
     quiz_question.result_id = answer.id
     if answer.is_correct:
-        quiz_question.box_number += 1
+        quiz_question.box_number = min(quiz_question.box_number + 1, 7)
     else:
         quiz_question.box_number = 1
     session.add(quiz_question)

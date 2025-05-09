@@ -171,9 +171,11 @@ class AnswerChecker(CheckerBase):
         super().__init__(os.path.join(json_schema_dir, "answers"))
 
     def __call__(self, answer: ResultRead, current_question: Annotated[Question, Depends(get_current_question)], current_quiz: Annotated[Quiz, Depends(get_current_quiz)], session: Annotated[Session, Depends(get_session)]) -> Result:
+        if not current_question:
+            raise HTTPException(status_code=400, detail="question_id query parameter required")
         quiz_question = session.exec(
             select(QuizQuestion).where(QuizQuestion.question_id == current_question.id, QuizQuestion.quiz_id == current_quiz.id)
-        ).first()
+        ).scalars().first()
         if not quiz_question:
             raise HTTPException(status_code=404, detail=f"The question {current_question.id} is not in the quiz {current_quiz.id}")
         if quiz_question.result_id is not None:
@@ -183,7 +185,7 @@ class AnswerChecker(CheckerBase):
             self.validate_schema(answer.data, current_question.type)
             self.additional_validation(answer, current_question)
         except ValidationError as e:
-            raise HTTPException(status_code=400, detail=f"Invalid format for type '{answer.get('type')}': {e.message}")
+            raise HTTPException(status_code=400, detail=f"Invalid format for type '{current_question.type}': {e.message}")
         self.answer_check(answer, current_question)
         result = Result(
             data=answer.data,
