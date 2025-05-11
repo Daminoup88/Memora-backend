@@ -4,15 +4,16 @@ from fastapi import APIRouter, HTTPException, Depends
 from app.dependencies import get_current_account, get_session, get_current_manager, get_validated_question, get_current_question, get_current_quiz, get_validated_answer
 from app.models.model_tables import Account, Manager, Question, Quiz, QuizQuestion, Result
 from typing import List, Annotated
-from app.crud.crud_quiz import create_leitner_quiz, have_all_questions_been_answered, save_answer, read_quiz_by_id
+from app.crud.crud_quiz import create_leitner_quiz, have_all_questions_been_answered, save_answer, read_quiz_by_id, get_latest_quiz_remaining_questions
 from app.schemas.schema_quiz import ResultRead
 
 router = APIRouter()
 
-@router.get("/{number_of_questions}", response_model=QuizRead, description="Creates and returns a quiz with a specified number of questions. If all questions from previous quizzes have not been answered, an error is raised.")
-def create_and_read_quiz_route(number_of_questions: int, current_account: Annotated[Session, Depends(get_current_account)], session: Annotated[Session, Depends(get_session)]) -> QuizRead:
-    if not have_all_questions_been_answered(current_account, session):
-        raise HTTPException(status_code=400, detail="All questions from previous quizzes have not been answered yet")
+@router.get("/{number_of_questions}", response_model=QuizRead, description="Creates a Leitner quiz with the specified number of questions. If the previous quiz has not completely been answered, it will be returned instead.")
+def read_leitner_quiz_route(number_of_questions: int, current_account: Annotated[Session, Depends(get_current_account)], session: Annotated[Session, Depends(get_session)]) -> QuizRead:
+    latest_quiz_remaining_questions = get_latest_quiz_remaining_questions(current_account, session)
+    if latest_quiz_remaining_questions:
+        return latest_quiz_remaining_questions
     return create_leitner_quiz(number_of_questions, current_account, session)
 
 @router.get("/", response_model=QuizRead)

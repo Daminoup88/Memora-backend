@@ -88,6 +88,34 @@ def create_leitner_quiz(number_of_questions: int, current_account: Account, sess
 
     return QuizRead(id=new_quiz.id, questions=questions_read)
 
+def get_latest_quiz_remaining_questions(current_account: Account, session: Session) -> QuizRead:
+    # SELECT id FROM Quiz q WHERE q.patient_id = :patient_id ORDER BY id DESC LIMIT 1
+    latest_quiz_id = session.exec(
+        select(Quiz.id).where(
+            Quiz.patient_id == current_account.patient_id
+        ).order_by(
+            Quiz.id.desc()
+        ).limit(1)
+    ).scalars().first()
+    if not latest_quiz_id:
+        return None
+
+    # SELECT * FROM Question q WHERE q.id IN (SELECT question_id FROM QuizQuestion qq WHERE qq.quiz_id = :quiz_id AND qq.result_id IS NULL)
+    questions = session.exec(
+        select(Question).where(
+            Question.id.in_(
+                select(QuizQuestion.question_id).where(
+                    QuizQuestion.quiz_id == latest_quiz_id,
+                    QuizQuestion.result_id.is_(None)
+                )
+            )
+        )
+    ).scalars().all()
+
+    if not questions:
+        return None
+    return QuizRead(id=latest_quiz_id, questions=questions)
+
 def read_quiz_by_id(current_quiz: Quiz, session: Session) -> QuizRead:
     # SELECT * FROM Question q WHERE q.id IN (SELECT question_id FROM QuizQuestion qq WHERE qq.quiz_id = :quiz_id)
     questions = session.exec(
