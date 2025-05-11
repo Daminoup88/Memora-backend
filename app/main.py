@@ -15,6 +15,7 @@ from sqlalchemy import cast, String
 import json
 from app.routers import router_default_questions
 from app.routers import router_quiz
+from app.routers import router_statistics
 
 # Load tables to metadata
 from app.models.model_tables import Account, Manager, Patient, Question, Result, Quiz, QuizQuestion, DefaultQuestions , LeitnerParameters
@@ -64,6 +65,7 @@ app.include_router(router_manager.router, prefix=f"{API_PREFIX}/managers", tags=
 app.include_router(router_questions.router, prefix=f"{API_PREFIX}/questions", tags=["question"])
 app.include_router(router_default_questions.router, prefix=f"{API_PREFIX}/default-questions", tags=["default-questions"])
 app.include_router(router_quiz.router, prefix=f"{API_PREFIX}/quiz", tags=["quiz"])
+app.include_router(router_statistics.router, prefix=f"{API_PREFIX}/statistics", tags=["statistics"])
 
 SQLModel.metadata.create_all(engine)
 logger.info("Database tables created")

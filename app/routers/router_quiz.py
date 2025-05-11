@@ -11,6 +11,8 @@ router = APIRouter()
 
 @router.get("/{number_of_questions}", response_model=QuizRead, description="Creates a Leitner quiz with the specified number of questions. If the previous quiz has not completely been answered, it will be returned instead.")
 def read_leitner_quiz_route(number_of_questions: int, current_account: Annotated[Session, Depends(get_current_account)], session: Annotated[Session, Depends(get_session)]) -> QuizRead:
+    if not current_account.patient_id:
+        raise HTTPException(status_code=400, detail="The current account is not associated with a patient.")
     latest_quiz_remaining_questions = get_latest_quiz_remaining_questions(current_account, session)
     if latest_quiz_remaining_questions:
         return latest_quiz_remaining_questions
