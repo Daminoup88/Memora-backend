@@ -2,11 +2,14 @@
     "$schema": "http://json-schema.org/draft-07/schema#",
     "type": "object",
     "properties": {
-        "choice": {
-            "type": "string",
-            "description": "The answer of the patient to the question"
+        "choices": {
+            "type": "array",
+            "items": {
+                "type": "string"
+            },
+            "description": "The list of answers of the patient to the question"
         }
     },
-    "required": ["choice"],
+    "required": ["choices"],
     "additionalProperties": false
 }
