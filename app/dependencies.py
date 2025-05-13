@@ -121,10 +121,6 @@ class ExerciseChecker(CheckerBase):
             if pipe_count != 2 * num_words:
                 raise ValidationError(f"expected {num_words} words, but found {pipe_count // 2} pipe pairs")
 
-        if question.type == "match_elements":
-            if len(question.exercise["column1"]) != len(question.exercise["column2"]):
-                raise ValidationError(f"column1 and column2 must have the same length")
-
 exercise_checker = ExerciseChecker()
 
 def get_validated_question(question: Annotated[QuestionCreate | QuestionUpdate, Depends(exercise_checker)]) -> QuestionCreate | QuestionUpdate:
@@ -199,10 +195,6 @@ class AnswerChecker(CheckerBase):
             pipe_count = question.exercise["question"].count('|')
             if pipe_count != 2 * num_words:
                 raise ValidationError(f"expected {num_words} words, but found {pipe_count // 2} pipe pairs")
-
-        if question.type == "match_elements":
-            if len(answer.data["column1"]) != len(answer.data["column2"]):
-                raise ValidationError(f"column1 and column2 must have the same length")
             
     def answer_check(self, answer: ResultRead, question: Question) -> bool:
         pass

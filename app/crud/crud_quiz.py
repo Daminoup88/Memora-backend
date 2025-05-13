@@ -68,6 +68,9 @@ def create_leitner_quiz(number_of_questions: int, current_account: Account, sess
     
     questions = never_answered + leitner_questions
 
+    if not questions:
+        raise HTTPException(status_code=404, detail="No quiz available")
+
     new_quiz = Quiz(patient_id=current_account.patient_id)
     session.add(new_quiz)
     session.commit()
