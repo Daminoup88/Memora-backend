@@ -60,8 +60,8 @@ valid_exercises = [
         "answer": "Pacifique"
     }),
     ("match_elements", {
-        "column1": ["France", "Espagne"],
-        "column2": ["Paris", "Madrid"]
+        "Paris": "France",
+        "Madrid": "Espagne"
     }),
     ("chronological_order", {
         "ordered": ["Révolution française", "Première Guerre mondiale", "Seconde Guerre mondiale"]
