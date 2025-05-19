@@ -320,3 +320,20 @@ def test_delete_question_not_found(client: TestClient, manager_created):
     response = client.delete("/api/questions/?question_id=99999", headers={"Authorization": f"Bearer {token}"})
     assert response.status_code == 404
     assert response.json()["detail"] == "Question not found"
+
+def test_delete_question_no_question_id(client: TestClient, session: Session, manager_created, question_payload):
+    token = manager_created["token"]
+    manager_id = manager_created["manager_id"]
+    # Create a question to ensure at least one exists
+    resp = client.post(f"/api/questions/?manager_id={manager_id}", json=question_payload, headers={"Authorization": f"Bearer {token}"})
+    assert resp.status_code == 200
+    # Attempt to delete without providing question_id
+    response = client.delete("/api/questions/", headers={"Authorization": f"Bearer {token}"})
+    assert response.status_code == 400
+    assert response.json()["detail"] == "question_id query parameter required"
+    # Check DB
+    question_db = session.exec(select(Question).where(Question.created_by == manager_id)).first()
+    assert question_db is not None
+    assert question_db.exercise == question_payload["exercise"]
+    assert question_db.type == question_payload["type"]
+    assert question_db.category == question_payload["category"]

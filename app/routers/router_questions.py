@@ -29,5 +29,7 @@ def update_question_route(question: Annotated[QuestionUpdate, Depends(get_valida
 
 @router.delete("/", response_model=dict)
 def delete_question_route(current_question: Annotated[Question, Depends(get_current_question)], session: Session = Depends(get_session)) -> dict:
+    if not current_question:
+        raise HTTPException(status_code=400, detail="question_id query parameter required")
     delete_question(session, current_question)
     return {"detail": "Question deleted successfully"}

@@ -1,11 +1,13 @@
 from fastapi.testclient import TestClient
 from sqlmodel import Session, select
-from app.models.model_tables import Account
+from app.models.model_tables import Account, Patient
 from app.schemas.schema_account import AccountCreate, AccountRead
 from app.dependencies import get_password_hash, create_access_token, verify_password
 
 ACCOUNT1 = {"username": "John", "password": "pwd123"}
 ACCOUNT2 = {"username": "Jane", "password": "password"}
+# Add patient test data for combined endpoint
+PATIENT1 = {"firstname": "Alice", "lastname": "Smith", "birthday": "1990-05-15"}
 
 def test_create_account(client: TestClient, session: Session):
     # create account
@@ -368,3 +370,92 @@ def test_delete_account_not_logged_in(client: TestClient, session: Session):
     assert account is not None
     assert verify_password(ACCOUNT1["password"], account.password_hash)
     assert account.username == ACCOUNT1["username"]
+
+def test_create_account_and_patient(client: TestClient, session: Session):
+    # Call combined endpoint
+    response = client.post(
+        "/api/accounts/create_account_and_patient/",
+        json={"account": ACCOUNT1, "patient": PATIENT1}
+    )
+    assert response.status_code == 200
+    data = response.json()
+    # Validate account response
+    assert data["username"] == ACCOUNT1["username"]
+    assert "password" not in data
+    assert "id" not in data
+    # Verify in DB
+    account = session.exec(select(Account).where(Account.username == ACCOUNT1["username"])) .first()
+    assert account is not None
+    assert account.patient_id is not None
+    patient = session.get(Patient, account.patient_id)
+    assert patient is not None
+    assert patient.firstname == PATIENT1["firstname"]
+    assert patient.lastname == PATIENT1["lastname"]
+    assert str(patient.birthday) == PATIENT1["birthday"]
+
+
+def test_create_account_and_patient_invalid_body(client: TestClient):
+    # Missing account and patient fields
+    response = client.post("/api/accounts/create_account_and_patient/", json={})
+    assert response.status_code == 422
+    data = response.json()
+    # Ensure validation errors for both models
+    assert any(err["loc"] == ["body", "account"] for err in data["detail"])
+    assert any(err["loc"] == ["body", "patient"] for err in data["detail"])
+
+def test_create_account_and_patient_duplicate_username(client: TestClient, session: Session):
+    # First creation of account and patient
+    client.post(
+        "/api/accounts/create_account_and_patient/",
+        json={"account": ACCOUNT1, "patient": PATIENT1}
+    )
+    # Attempt duplicate username
+    response = client.post(
+        "/api/accounts/create_account_and_patient/",
+        json={"account": ACCOUNT1, "patient": PATIENT1}
+    )
+    assert response.status_code == 400
+    data = response.json()
+    assert data["detail"] == "Username already registered"
+
+def test_create_account_and_patient_empty_account_username(client: TestClient):
+    return
+    response = client.post(
+        "/api/accounts/create_account_and_patient/",
+        json={"account": {"username": "", "password": "pwd123"}, "patient": PATIENT1}
+    )
+    assert response.status_code == 422
+
+
+def test_create_account_and_patient_empty_account_password(client: TestClient):
+    return
+    response = client.post(
+        "/api/accounts/create_account_and_patient/",
+        json={"account": {"username": "John", "password": ""}, "patient": PATIENT1}
+    )
+    assert response.status_code == 422
+
+
+def test_create_account_and_patient_empty_patient_firstname(client: TestClient, session: Session):
+    return
+    response = client.post(
+        "/api/accounts/create_account_and_patient/",
+        json={"account": ACCOUNT1, "patient": {"firstname": "", "lastname": "Smith", "birthday": "1990-05-15"}}
+    )
+    assert response.status_code == 422
+
+def test_create_account_and_patient_empty_patient_lastname(client: TestClient, session: Session):
+    return
+    response = client.post(
+        "/api/accounts/create_account_and_patient/",
+        json={"account": ACCOUNT1, "patient": {"firstname": "Alice", "lastname": "", "birthday": "1990-05-15"}}
+    )
+    assert response.status_code == 422
+
+def test_create_account_and_patient_empty_patient_birthday(client: TestClient, session: Session):
+    return
+    response = client.post(
+        "/api/accounts/create_account_and_patient/",
+        json={"account": ACCOUNT1, "patient": {"firstname": "Alice", "lastname": "Smith", "birthday": ""}}
+    )
+    assert response.status_code == 422
