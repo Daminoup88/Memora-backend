@@ -44,8 +44,8 @@ def create_leitner_quiz(number_of_questions: int, current_account: Account, sess
     # AND qz.created_at < (CURRENT_TIMESTAMP - lp.leitner_delay)
     # ORDER BY qq.box_number ASC
     # LIMIT 10;
-    leitner_questions = session.exec(
-        select(Question).where(
+    leitner_data = session.exec(
+        select(Question, QuizQuestion.box_number).where(
             Question.account_id == current_account.id
         ).join(
             QuizQuestion, QuizQuestion.question_id == Question.id
@@ -64,8 +64,14 @@ def create_leitner_quiz(number_of_questions: int, current_account: Account, sess
         ).order_by(
             QuizQuestion.box_number.asc()
         ).limit(number_of_questions - len(never_answered))
-    ).scalars().all()
+    ).all()
     
+    leitner_questions = []
+    leitner_boxes = {}
+    for question, box_number in leitner_data:
+        leitner_boxes[question.id] = box_number
+        leitner_questions.append(question)
+
     questions = never_answered + leitner_questions
 
     if not questions:
@@ -83,8 +89,10 @@ def create_leitner_quiz(number_of_questions: int, current_account: Account, sess
             quiz_id=new_quiz.id,
             question_id=question.id
         )
-        if quiz_question.box_number is None:
+        if leitner_boxes.get(question.id) is None:
             quiz_question.box_number = 1
+        else:
+            quiz_question.box_number = leitner_boxes[question.id]
         questions_read.append(QuestionRead(**question.model_dump()))
         session.add(quiz_question)
     session.commit()
