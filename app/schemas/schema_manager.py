@@ -8,7 +8,7 @@ class ManagerRead(SQLModel):
     relationship: str
     created_at: datetime
     updated_at: datetime
-    #TODO pp_path: str | None = 
+    pp_path: str | None = None
 
 class ManagerCreate(SQLModel):
     firstname: str
