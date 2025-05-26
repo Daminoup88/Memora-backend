@@ -1,6 +1,7 @@
 from sqlmodel import Session, select
-from fastapi import HTTPException
+from fastapi import HTTPException, UploadFile
 from app.models.model_tables import Account, Manager
+import os
 
 def create_manager(session: Session, manager: Manager, current_account: Account) -> Manager:
 
@@ -36,7 +37,21 @@ def delete_manager(session: Session, current_manager: Manager) -> bool:
     current_manager = session.get(Manager, current_manager.id)
     if not current_manager:
         raise HTTPException(status_code=404, detail="Manager not found") # pragma: no cover (security measure)
+    if current_manager.pp_path and os.path.exists(current_manager.pp_path):
+        os.remove(current_manager.pp_path)
     session.delete(current_manager)
     session.commit()
 
     return True
+
+def save_manager_profile_picture(session: Session, current_manager: Manager, file: UploadFile, ext: str) -> str:
+    MEDIA_ROOT = "media/pp"
+    os.makedirs(MEDIA_ROOT, exist_ok=True)
+    filename = f"manager_{current_manager.id}{ext}"
+    file_path = os.path.join(MEDIA_ROOT, filename)
+    with open(file_path, "wb") as f:
+        f.write(file.file.read())
+    current_manager.pp_path = file_path
+    session.add(current_manager)
+    session.commit()
+    return file_path

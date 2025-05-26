@@ -3,7 +3,7 @@ from sqlmodel import Session
 from app.models.model_tables import Account, Manager
 from app.schemas.schema_manager import ManagerRead, ManagerCreate, ManagerUpdate
 from app.dependencies import get_session, get_current_account, get_current_manager
-from app.crud.crud_manager import create_manager, update_manager, delete_manager, read_managers
+from app.crud.crud_manager import create_manager, update_manager, delete_manager, read_managers, save_manager_profile_picture
 from typing import Annotated
 from fastapi.responses import FileResponse
 import os
@@ -50,28 +50,19 @@ def delete_manager_route(current_manager: Annotated[Manager, Depends(get_current
         raise HTTPException(status_code=500, detail="Failed to delete manager") # pragma: no cover (security measure)
     return {"detail": "Manager deleted successfully"}
 
-@router.post("/{manager_id}/upload_pp", response_model=dict)
-def upload_profile_picture(
-    current_manager: Annotated[Manager, Depends(get_current_manager)],
-    session: Annotated[Session, Depends(get_session)],
-    file: UploadFile = File(...)
-):
+@router.post("/{manager_id}/profile-picture", response_model=dict)
+async def upload_profile_picture(current_manager: Annotated[Manager, Depends(get_current_manager)], session: Annotated[Session, Depends(get_session)], file: UploadFile = File(...)) -> dict:
     allowed_exts = {".png", ".jpeg", ".jpg"}
     ext = os.path.splitext(file.filename)[1].lower()
     if ext not in allowed_exts:
         raise HTTPException(status_code=400, detail="Only .png, .jpeg, .jpg files are allowed")
-    os.makedirs(MEDIA_ROOT, exist_ok=True)
-    filename = f"manager_{current_manager.id}{ext}"
-    file_path = os.path.join(MEDIA_ROOT, filename)
-    with open(file_path, "wb") as f:
-        f.write(file.file.read())
-    current_manager.pp_path = file_path
-    session.add(current_manager)
-    session.commit()
+    if current_manager.pp_path and os.path.exists(current_manager.pp_path):
+        os.remove(current_manager.pp_path)
+    file_path = save_manager_profile_picture(session, current_manager, file, ext)
     return {"detail": "Profile picture uploaded", "pp_path": file_path}
 
-@router.get("/{manager_id}/profile_picture")
-def get_profile_picture(current_manager: Annotated[Manager, Depends(get_current_manager)]):
+@router.get("/{manager_id}/profile-picture")
+def get_profile_picture(current_manager: Annotated[Manager, Depends(get_current_manager)]) -> FileResponse:
     if not current_manager.pp_path or not os.path.exists(current_manager.pp_path):
         raise HTTPException(status_code=404, detail="Profile picture not found")
     return FileResponse(current_manager.pp_path)

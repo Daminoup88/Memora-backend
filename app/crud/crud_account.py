@@ -1,6 +1,7 @@
 from sqlmodel import Session, select
 from fastapi import HTTPException
-from app.models.model_tables import Account, Patient
+from app.models.model_tables import Account, Patient, Manager
+import os
 
 def create_account(session: Session, account: Account) -> Account:
     account = Account(**account.model_dump())
@@ -34,6 +35,10 @@ def update_account(session: Session, current_account: Account, account: Account)
     return None # pragma: no cover (security measure)
 
 def delete_account(session: Session, current_account: Account) -> bool:
+    managers = session.exec(select(Manager).where(Manager.account_id == current_account.id, Manager.pp_path.is_not(None))).all()
+    for m in managers:
+        if os.path.exists(m.pp_path):
+            os.remove(m.pp_path)
     if current_account.patient_id:
         patient = session.get(Patient, current_account.patient_id)
         if patient:

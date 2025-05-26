@@ -374,11 +374,12 @@ def test_delete_account_not_logged_in(client: TestClient, session: Session):
 def test_create_account_and_patient(client: TestClient, session: Session):
     # Call combined endpoint
     response = client.post(
-        "/api/accounts/create_account_and_patient/",
+        "/api/accounts/account-and-patient/",
         json={"account": ACCOUNT1, "patient": PATIENT1}
     )
     assert response.status_code == 200
     data = response.json()
+    print(data)
     # Validate account response
     assert data["username"] == ACCOUNT1["username"]
     assert "password" not in data
@@ -396,7 +397,7 @@ def test_create_account_and_patient(client: TestClient, session: Session):
 
 def test_create_account_and_patient_invalid_body(client: TestClient):
     # Missing account and patient fields
-    response = client.post("/api/accounts/create_account_and_patient/", json={})
+    response = client.post("/api/accounts/account-and-patient/", json={})
     assert response.status_code == 422
     data = response.json()
     # Ensure validation errors for both models
@@ -406,12 +407,12 @@ def test_create_account_and_patient_invalid_body(client: TestClient):
 def test_create_account_and_patient_duplicate_username(client: TestClient, session: Session):
     # First creation of account and patient
     client.post(
-        "/api/accounts/create_account_and_patient/",
+        "/api/accounts/account-and-patient/",
         json={"account": ACCOUNT1, "patient": PATIENT1}
     )
     # Attempt duplicate username
     response = client.post(
-        "/api/accounts/create_account_and_patient/",
+        "/api/accounts/account-and-patient/",
         json={"account": ACCOUNT1, "patient": PATIENT1}
     )
     assert response.status_code == 400
@@ -421,7 +422,7 @@ def test_create_account_and_patient_duplicate_username(client: TestClient, sessi
 def test_create_account_and_patient_empty_account_username(client: TestClient):
     return
     response = client.post(
-        "/api/accounts/create_account_and_patient/",
+        "/api/accounts/account-and-patient/",
         json={"account": {"username": "", "password": "pwd123"}, "patient": PATIENT1}
     )
     assert response.status_code == 422
@@ -430,7 +431,7 @@ def test_create_account_and_patient_empty_account_username(client: TestClient):
 def test_create_account_and_patient_empty_account_password(client: TestClient):
     return
     response = client.post(
-        "/api/accounts/create_account_and_patient/",
+        "/api/accounts/account-and-patient/",
         json={"account": {"username": "John", "password": ""}, "patient": PATIENT1}
     )
     assert response.status_code == 422
@@ -439,7 +440,7 @@ def test_create_account_and_patient_empty_account_password(client: TestClient):
 def test_create_account_and_patient_empty_patient_firstname(client: TestClient, session: Session):
     return
     response = client.post(
-        "/api/accounts/create_account_and_patient/",
+        "/api/accounts/account-and-patient/",
         json={"account": ACCOUNT1, "patient": {"firstname": "", "lastname": "Smith", "birthday": "1990-05-15"}}
     )
     assert response.status_code == 422
@@ -447,7 +448,7 @@ def test_create_account_and_patient_empty_patient_firstname(client: TestClient, 
 def test_create_account_and_patient_empty_patient_lastname(client: TestClient, session: Session):
     return
     response = client.post(
-        "/api/accounts/create_account_and_patient/",
+        "/api/accounts/account-and-patient/",
         json={"account": ACCOUNT1, "patient": {"firstname": "Alice", "lastname": "", "birthday": "1990-05-15"}}
     )
     assert response.status_code == 422
@@ -455,7 +456,7 @@ def test_create_account_and_patient_empty_patient_lastname(client: TestClient, s
 def test_create_account_and_patient_empty_patient_birthday(client: TestClient, session: Session):
     return
     response = client.post(
-        "/api/accounts/create_account_and_patient/",
+        "/api/accounts/account-and-patient/",
         json={"account": ACCOUNT1, "patient": {"firstname": "Alice", "lastname": "Smith", "birthday": ""}}
     )
     assert response.status_code == 422

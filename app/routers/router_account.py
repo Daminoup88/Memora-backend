@@ -20,7 +20,7 @@ def create_account_route(account: AccountCreate, session: Annotated[Session, Dep
     account_to_create.password_hash = get_password_hash(account.password)
     return create_account(session, account_to_create)
 
-@router.post("/create_account_and_patient/", response_model=AccountRead)
+@router.post("/account-and-patient/", response_model=AccountRead)
 def create_account_and_patient_route(account: AccountCreate, patient: PatientCreate, session: Annotated[Session, Depends(get_session)]) -> AccountRead:
     created_account = create_account_route(account, session)
     if not created_account:
