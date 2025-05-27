@@ -4,6 +4,7 @@ from app.schemas.schema_question import QuestionRead
 from app.schemas.schema_quiz import QuizRead, ResultRead
 from sqlmodel import Session
 from app.models.model_tables import Result, QuizQuestion, Question, Quiz, Account, LeitnerParameters
+import base64
 
 def have_all_questions_been_answered(current_account: Account, session: Session) -> bool:
     # SELECT COUNT(*) FROM Question q WHERE account_id = :account_id AND id IN (SELECT question_id FROM QuizQuestion qq WHERE qq.question_id = q.id AND qq.result_id IS NULL)
@@ -19,7 +20,12 @@ def have_all_questions_been_answered(current_account: Account, session: Session)
     ).first()
     return never_answered == None
 
-def create_leitner_quiz(number_of_questions: int, current_account: Account, session: Session) -> QuizRead:
+def _get_image_url(base_url, question):
+    if question.image_path:
+        return f"{base_url}api/questions/{question.id}/image"
+    return None
+
+def create_leitner_quiz(number_of_questions: int, current_account: Account, session: Session, base_url: str) -> QuizRead:
     # SELECT * FROM Question WHERE account_id = :account_id AND id NOT IN (SELECT question_id FROM QuizQuestion)
     never_answered = session.exec(
         select(Question).where(
@@ -93,13 +99,16 @@ def create_leitner_quiz(number_of_questions: int, current_account: Account, sess
             quiz_question.box_number = 1
         else:
             quiz_question.box_number = leitner_boxes[question.id]
-        questions_read.append(QuestionRead(**question.model_dump()))
+        q_dict = question.model_dump()
+        q_dict["image_path"] = question.image_path  # optionnel, à retirer si inutile côté client
+        q_dict["image_url"] = _get_image_url(base_url, question)  # lien public pour accès image
+        questions_read.append(QuestionRead(**q_dict))
         session.add(quiz_question)
     session.commit()
 
     return QuizRead(id=new_quiz.id, questions=questions_read)
 
-def get_latest_quiz_remaining_questions(current_account: Account, session: Session) -> QuizRead:
+def get_latest_quiz_remaining_questions(current_account: Account, session: Session, base_url: str) -> QuizRead:
     # SELECT id FROM Quiz q WHERE q.patient_id = :patient_id ORDER BY id DESC LIMIT 1
     latest_quiz_id = session.exec(
         select(Quiz.id).where(
@@ -125,9 +134,15 @@ def get_latest_quiz_remaining_questions(current_account: Account, session: Sessi
 
     if not questions:
         return None
-    return QuizRead(id=latest_quiz_id, questions=questions)
+    questions_read = []
+    for question in questions:
+        q_dict = question.model_dump()
+        q_dict["image_path"] = question.image_path
+        q_dict["image_url"] = _get_image_url(base_url, question)
+        questions_read.append(QuestionRead(**q_dict))
+    return QuizRead(id=latest_quiz_id, questions=questions_read)
 
-def read_quiz_by_id(current_quiz: Quiz, session: Session) -> QuizRead:
+def read_quiz_by_id(current_quiz: Quiz, session: Session, base_url: str) -> QuizRead:
     # SELECT * FROM Question q WHERE q.id IN (SELECT question_id FROM QuizQuestion qq WHERE qq.quiz_id = :quiz_id)
     questions = session.exec(
         select(Question).where(
@@ -139,7 +154,13 @@ def read_quiz_by_id(current_quiz: Quiz, session: Session) -> QuizRead:
         )
     ).scalars().all()
 
-    return QuizRead(id=current_quiz.id, questions=questions)
+    questions_read = []
+    for question in questions:
+        q_dict = question.model_dump()
+        q_dict["image_path"] = question.image_path
+        q_dict["image_url"] = _get_image_url(base_url, question)
+        questions_read.append(QuestionRead(**q_dict))
+    return QuizRead(id=current_quiz.id, questions=questions_read)
 
 def save_answer(answer: Result, current_quiz: Quiz, question: Question, session: Session) -> ResultRead:
     # SELECT * FROM QuizQuestion qq WHERE qq.question_id = :question_id AND qq.quiz_id = :quiz_id

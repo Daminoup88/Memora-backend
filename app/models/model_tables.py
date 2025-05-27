@@ -51,6 +51,7 @@ class Question(BaseTable, table=True):
     account_id: int = Field(foreign_key="account.id", ondelete="CASCADE")
     created_by: Optional[int] = Field(foreign_key="manager.id", nullable=True, ondelete="SET NULL")
     edited_by: Optional[int] = Field(foreign_key="manager.id", nullable=True, ondelete="SET NULL")
+    image_path: Optional[str] = Field(default=None, description="question image path")
 
 
 class Result(BaseTable, table=True):
