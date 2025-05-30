@@ -113,8 +113,6 @@ class ExerciseChecker(CheckerBase):
             self.additional_validation(question)
         except ValidationError as e:
             raise HTTPException(status_code=400, detail=f"Invalid format for type '{question.type}': {e.message}")
-        except KeyError as e:
-            raise HTTPException(status_code=422, detail=f"Missing field: {e}")
         return question
 
     def additional_validation(self, question: QuestionCreate | QuestionUpdate) -> None:
@@ -127,18 +125,7 @@ class ExerciseChecker(CheckerBase):
 exercise_checker = ExerciseChecker()
 
 def get_validated_question(question: Annotated[QuestionCreate | QuestionUpdate, Depends(exercise_checker)]) -> QuestionCreate | QuestionUpdate:
-    try:
-        return exercise_checker(question)
-    except PydanticValidationError as e:
-        # Validation de schéma Pydantic (champs requis, types) => 422
-        raise HTTPException(status_code=422, detail=e.errors())
-    except ValidationError as e:
-        # Validation métier (jsonschema) => 400
-        raise HTTPException(status_code=400, detail=f"Invalid format for type '{getattr(question, 'type', None)}': {e.message}")
-    except HTTPException:
-        raise
-    except Exception as e:
-        raise HTTPException(status_code=400, detail=str(e))
+    return exercise_checker(question)
 
 class QuestionChecker:
     def __init__(self):

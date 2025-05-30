@@ -21,12 +21,7 @@ def get_image_url(request: Request, question):
     return None
 
 @router.post("/", response_model=QuestionRead)
-def create_question_route(
-    question: Annotated[str, Form(...)],
-    current_manager: Annotated[Manager, Depends(get_current_manager)],
-    session: Annotated[Session, Depends(get_session)],
-    image: UploadFile = File(None)
-) -> QuestionRead:
+def create_question_route(question: Annotated[str, Form(...)], current_manager: Annotated[Manager, Depends(get_current_manager)], session: Annotated[Session, Depends(get_session)], image: UploadFile = File(None)) -> QuestionRead:
     try:
         question_dict = json.loads(question)
     except Exception:
@@ -52,12 +47,7 @@ def create_question_route(
     return create_question(session, question_to_create, current_manager)
 
 @router.get("/", response_model=List[QuestionRead] | QuestionRead, description="Returns all questions or a specific question if question_id query parameter is provided.")
-def read_questions_route(
-    question: Annotated[Question, Depends(get_current_question)],
-    current_account: Annotated[Account, Depends(get_current_account)],
-    session: Session = Depends(get_session),
-    request: Request = None
-) -> List[QuestionRead] | QuestionRead:
+def read_questions_route(question: Annotated[Question, Depends(get_current_question)], current_account: Annotated[Account, Depends(get_current_account)], session: Session = Depends(get_session), request: Request = None) -> List[QuestionRead] | QuestionRead:
     if question:
         data = question.model_dump()
         data["image_url"] = get_image_url(request, question)

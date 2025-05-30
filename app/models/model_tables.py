@@ -67,7 +67,7 @@ class QuizQuestion(SQLModel, table=True):
     question_id: int = Field(foreign_key="question.id", primary_key=True, ondelete="CASCADE")
     quiz_id: int = Field(foreign_key="quiz.id", primary_key=True, ondelete="CASCADE")
     result_id: int = Field(foreign_key="result.id", nullable=True, default=None, ondelete="SET NULL")
-    box_number: Optional[int] = Field(default=None, nullable=True)
+    box_number: Optional[int] = Field(default=None, nullable=True, foreign_key="leitnerparameters.box_number")
 
 
 class DefaultQuestions(SQLModel, table=True):
