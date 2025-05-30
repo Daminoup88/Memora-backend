@@ -15,6 +15,7 @@ import json
 from jsonschema import validate, ValidationError
 from app.schemas.schema_question import QuestionCreate, QuestionUpdate
 from app.schemas.schema_quiz import ResultRead
+from pydantic import ValidationError as PydanticValidationError
 
 # Database
 engine = create_engine(database.DATABASE_URL)
@@ -112,6 +113,8 @@ class ExerciseChecker(CheckerBase):
             self.additional_validation(question)
         except ValidationError as e:
             raise HTTPException(status_code=400, detail=f"Invalid format for type '{question.type}': {e.message}")
+        except KeyError as e:
+            raise HTTPException(status_code=422, detail=f"Missing field: {e}")
         return question
 
     def additional_validation(self, question: QuestionCreate | QuestionUpdate) -> None:
@@ -124,7 +127,18 @@ class ExerciseChecker(CheckerBase):
 exercise_checker = ExerciseChecker()
 
 def get_validated_question(question: Annotated[QuestionCreate | QuestionUpdate, Depends(exercise_checker)]) -> QuestionCreate | QuestionUpdate:
-    return question
+    try:
+        return exercise_checker(question)
+    except PydanticValidationError as e:
+        # Validation de schéma Pydantic (champs requis, types) => 422
+        raise HTTPException(status_code=422, detail=e.errors())
+    except ValidationError as e:
+        # Validation métier (jsonschema) => 400
+        raise HTTPException(status_code=400, detail=f"Invalid format for type '{getattr(question, 'type', None)}': {e.message}")
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=str(e))
 
 class QuestionChecker:
     def __init__(self):

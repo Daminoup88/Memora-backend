@@ -9,6 +9,7 @@ from jsonschema import validate, ValidationError
 from fastapi.responses import FileResponse
 import os
 import json
+from pydantic import ValidationError as PydanticValidationError
 
 MEDIA_ROOT = "media/question_images"
 
@@ -30,7 +31,10 @@ def create_question_route(
         question_dict = json.loads(question)
     except Exception:
         raise HTTPException(status_code=400, detail="Invalid JSON for question")
-    question_obj = QuestionCreate(**question_dict)
+    try:
+        question_obj = QuestionCreate(**question_dict)
+    except PydanticValidationError as e:
+        raise HTTPException(status_code=422, detail=e.errors())
     validated_question = get_validated_question(question_obj)
     question_data = validated_question.model_dump()
     if image:
@@ -67,10 +71,24 @@ def read_questions_route(
     return result
 
 @router.put("/", response_model=QuestionRead)
-def update_question_route(question: Annotated[QuestionUpdate, Depends(get_validated_question)], current_question: Annotated[Question, Depends(get_current_question)], current_manager: Annotated[Manager, Depends(get_current_manager)], session: Session = Depends(get_session)) -> QuestionRead:
+def update_question_route(
+    question: Annotated[str, Form(...)],
+    current_question: Annotated[Question, Depends(get_current_question)],
+    current_manager: Annotated[Manager, Depends(get_current_manager)],
+    session: Session = Depends(get_session)
+) -> QuestionRead:
     if not current_question:
         raise HTTPException(status_code=400, detail="question_id query parameter required")
-    question_data = Question(**question.model_dump())
+    try:
+        question_dict = json.loads(question)
+    except Exception:
+        raise HTTPException(status_code=400, detail="Invalid JSON for question")
+    try:
+        question_obj = QuestionUpdate(**question_dict)
+    except PydanticValidationError as e:
+        raise HTTPException(status_code=422, detail=e.errors())
+    validated_question = get_validated_question(question_obj)
+    question_data = Question(**validated_question.model_dump())
     return update_question(session, question_data, current_question, current_manager)
 
 @router.delete("/", response_model=dict)
