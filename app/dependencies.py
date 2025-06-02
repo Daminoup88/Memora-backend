@@ -4,7 +4,7 @@ from app.database import database
 from typing import Generator
 from app.models.model_tables import Account, Manager, Question, Quiz, Result, QuizQuestion
 from app.crud.crud_account import read_account_by_id, read_account_by_username
-from app.config import pwd_context, settings, json_schema_dir
+from app.config import pwd_context, settings, json_schema_dir, clues_model_settings, questions_model_settings, embedding_model_settings
 from fastapi.security import OAuth2PasswordBearer
 import jwt
 from jwt import InvalidTokenError
@@ -16,6 +16,7 @@ from jsonschema import validate, ValidationError
 from app.schemas.schema_question import QuestionCreate, QuestionUpdate
 from app.schemas.schema_quiz import ResultRead
 from pydantic import ValidationError as PydanticValidationError
+from app.llm import LLMModel
 
 # Database
 engine = create_engine(database.DATABASE_URL)
@@ -204,3 +205,18 @@ answer_checker = AnswerChecker()
 
 def get_validated_answer(answer: Annotated[Result, Depends(answer_checker)]) -> Result:
     return answer
+
+# LLM dependencies
+
+clues_llm = LLMModel(clues_model_settings)
+questions_llm = LLMModel(questions_model_settings)
+embedding_llm = LLMModel(embedding_model_settings)
+
+def get_clues_llm() -> LLMModel:
+    return clues_llm
+
+# def get_questions_llm() -> LLMModel:
+#     return questions_llm
+
+def get_embedding_llm() -> LLMModel:
+    return embedding_llm

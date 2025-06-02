@@ -30,11 +30,11 @@ json_schema_dir = "json_schema"
 # LLM Config
 
 llm_parameters = {
-    "temperature": "0.3",
-    "top_p": "0.9",
-    "top_k": "40",
-    "repeat_penalty": "1.1",
-    "num_ctx": "4096"
+    "temperature": 0.3,
+    "top_p": 0.9,
+    "top_k": 40,
+    "repeat_penalty": 1.1,
+    "num_ctx": 4096
 }
 
 llm_template = """{{ if .System }}<|im_start|>system
@@ -73,7 +73,7 @@ class LLMSettings(BaseSettings):
     model_name: str
     is_custom: bool = False
     from_: Optional[str] = None
-    parameters: Optional[Mapping[str, str]] = None
+    parameters: Optional[Mapping[str, float]] = None
     template: Optional[str] = None
     system: Optional[str] = None
 
