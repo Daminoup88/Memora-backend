@@ -7,7 +7,8 @@ API of the SanteActive project using FastAPI.
 ### Prerequisites
 
 - Python 3.10+
-- PostgreSQL
+- PostgreSQL with pgvector extension
+- Ollama
 
 ### Installation
 

@@ -1,5 +1,5 @@
 from ollama import AsyncClient, RequestError, ResponseError
-from config import logger, LLMSettings
+from app.config import logger, LLMSettings
 import asyncio
 import sys
 from functools import wraps

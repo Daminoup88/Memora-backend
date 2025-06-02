@@ -37,6 +37,9 @@ class Database:
                 query = text(f"CREATE DATABASE {settings.database_name}")
                 connection.execute(query)
                 logger.info(f"The database '{settings.database_name}' has been successfully created.")
+                query = text("CREATE EXTENSION IF NOT EXISTS vector")
+                connection.execute(query)
+                logger.info("The 'vector' extension has been successfully created.")
         except Exception as e:
             logger.error(f"An error occurred: {e}")
     

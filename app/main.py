@@ -18,7 +18,7 @@ from app.routers import router_quiz
 from app.routers import router_statistics
 
 # Load tables to metadata
-from app.models.model_tables import Account, Manager, Patient, Question, Result, Quiz, QuizQuestion, DefaultQuestions , LeitnerParameters
+from app.models.model_tables import Account, Manager, Patient, Question, Result, Quiz, QuizQuestion, DefaultQuestions , LeitnerParameters, RawData
 
 # Unique IDs for routes for frontend client generation
 # !!! All the routes must have unique names !!!

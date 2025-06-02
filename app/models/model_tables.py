@@ -1,8 +1,9 @@
 from datetime import date, datetime
-from typing import Optional
+from typing import Optional, Any
 from sqlmodel import Field, SQLModel
 from sqlalchemy.dialects.postgresql import JSON
 from sqlalchemy import DateTime, text, Interval
+from pgvector.sqlalchemy import Vector
 from pydantic import ConfigDict
 
 class BaseTable(SQLModel):
@@ -48,10 +49,20 @@ class Question(BaseTable, table=True):
     type: str
     category: str
     exercise: dict = Field(sa_type=JSON)
+    embedding: Optional[Any] = Field(sa_type=Vector)
     account_id: int = Field(foreign_key="account.id", ondelete="CASCADE")
     created_by: Optional[int] = Field(foreign_key="manager.id", nullable=True, ondelete="SET NULL")
     edited_by: Optional[int] = Field(foreign_key="manager.id", nullable=True, ondelete="SET NULL")
     image_path: Optional[str] = Field(default=None, description="question image path")
+
+
+class RawData(BaseTable, table=True):
+    account_id: int = Field(foreign_key="account.id", ondelete="CASCADE")
+    text: str
+    embedding: Optional[Any] = Field(sa_type=Vector)
+    created_by: Optional[int] = Field(foreign_key="manager.id", nullable=True, ondelete="SET NULL")
+    edited_by: Optional[int] = Field(foreign_key="manager.id", nullable=True, ondelete="SET NULL")
+    file_path: Optional[str] = Field(default=None, description="raw data file path")
 
 
 class Result(BaseTable, table=True):
