@@ -157,8 +157,6 @@ def test_create_question_missing_fields(client: TestClient, token, missing_field
     data = {"question": json.dumps(payload)}
     response = client.post("/api/questions/", data=data, headers={"Authorization": f"Bearer {token}"})
     assert response.status_code == 422
-    # ya bien le missing kys
-    #assert any(detail["loc"][-1] == missing_field for detail in response.json()["detail"])
 
 @pytest.mark.parametrize("payload", valid_exercises)
 def test_create_question_success(client: TestClient, session: Session, manager_created, payload):
@@ -185,8 +183,6 @@ def test_create_question_invalid_body(client: TestClient, token):
     data = {"question": "{}"}
     response = client.post("/api/questions/", data=data, headers={"Authorization": f"Bearer {token}"})
     assert response.status_code == 422
-    # pareil kys
-    # assert any(detail["loc"][-1] in ("type", "category", "exercise") for detail in response.json()["detail"])
 
 @pytest.mark.parametrize("payload", invalid_exercises)
 def test_create_question_invalid_exercise(client: TestClient, manager_created, payload):

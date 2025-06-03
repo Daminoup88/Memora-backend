@@ -16,6 +16,8 @@ class Settings(BaseSettings):
 
     password_algorithm: str
 
+    llm_enabled: bool = False
+
     model_config = SettingsConfigDict(env_file='.env', extra='ignore')
 
 settings = Settings()

@@ -1,3 +1,6 @@
+import os
+os.environ["llm_enabled"] = "false"  # Disable LLM for tests
+
 import pytest
 from fastapi.testclient import TestClient
 from sqlmodel import Session, SQLModel, create_engine
@@ -6,7 +9,7 @@ from app.dependencies import get_session, get_password_hash, create_access_token
 from app.database import Database
 
 # Import the models to test to create the tables from metadata
-from app.models.model_tables import Account, Manager, Patient, Question, Result, Quiz, QuizQuestion
+from app.models.model_tables import Account, Manager, Patient, Question, Result, Quiz, QuizQuestion, DefaultQuestions , LeitnerParameters, RawData
 
 @pytest.fixture(name="session")
 def session_fixture():

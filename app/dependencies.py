@@ -208,15 +208,22 @@ def get_validated_answer(answer: Annotated[Result, Depends(answer_checker)]) -> 
 
 # LLM dependencies
 
-clues_llm = LLMModel(clues_model_settings)
-questions_llm = LLMModel(questions_model_settings)
-embedding_llm = LLMModel(embedding_model_settings)
+if settings.llm_enabled:
+    clues_llm = LLMModel(clues_model_settings)
+    questions_llm = LLMModel(questions_model_settings)
+    embedding_llm = LLMModel(embedding_model_settings)
 
 def get_clues_llm() -> LLMModel:
+    if not settings.llm_enabled:
+        return None
     return clues_llm
 
 # def get_questions_llm() -> LLMModel:
+#     if not settings.llm_enabled:
+#        return None
 #     return questions_llm
 
 def get_embedding_llm() -> LLMModel:
+    if not settings.llm_enabled:
+        return None
     return embedding_llm

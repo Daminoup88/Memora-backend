@@ -1,15 +1,16 @@
 from fastapi import APIRouter, HTTPException, Depends, UploadFile, File, Request, Form
 from sqlmodel import Session
-from app.schemas.schema_question import QuestionCreate, QuestionRead, QuestionUpdate
-from app.dependencies import get_current_account, get_session, get_current_manager, get_validated_question, get_current_question
+from app.schemas.schema_question import QuestionCreate, QuestionRead, QuestionUpdate, Clues
+from app.dependencies import get_current_account, get_session, get_current_manager, get_validated_question, get_current_question, get_clues_llm, get_embedding_llm
 from app.models.model_tables import Account, Manager, Question
-from app.crud.crud_questions import create_question, read_questions, update_question, delete_question
+from app.crud.crud_questions import create_question, read_questions, update_question, delete_question, get_nearest_questions
 from typing import List, Annotated
 from jsonschema import validate, ValidationError
 from fastapi.responses import FileResponse
 import os
 import json
 from pydantic import ValidationError as PydanticValidationError
+from app.llm import LLMModel
 
 MEDIA_ROOT = "media/question_images"
 
@@ -21,7 +22,7 @@ def get_image_url(request: Request, question):
     return None
 
 @router.post("/", response_model=QuestionRead)
-def create_question_route(question: Annotated[str, Form(...)], current_manager: Annotated[Manager, Depends(get_current_manager)], session: Annotated[Session, Depends(get_session)], image: UploadFile = File(None)) -> QuestionRead:
+async def create_question_route(question: Annotated[str, Form(...)], current_manager: Annotated[Manager, Depends(get_current_manager)], embedding_model: Annotated[LLMModel, Depends(get_embedding_llm)], session: Annotated[Session, Depends(get_session)], image: UploadFile = File(None)) -> QuestionRead:
     try:
         question_dict = json.loads(question)
     except Exception:
@@ -44,7 +45,7 @@ def create_question_route(question: Annotated[str, Form(...)], current_manager: 
             f.write(image.file.read())
         question_data["image_path"] = file_path
     question_to_create = Question(**question_data)
-    return create_question(session, question_to_create, current_manager)
+    return await create_question(session, question_to_create, current_manager, embedding_model)
 
 @router.get("/", response_model=List[QuestionRead] | QuestionRead, description="Returns all questions or a specific question if question_id query parameter is provided.")
 def read_questions_route(question: Annotated[Question, Depends(get_current_question)], current_account: Annotated[Account, Depends(get_current_account)], session: Session = Depends(get_session), request: Request = None) -> List[QuestionRead] | QuestionRead:
@@ -61,12 +62,7 @@ def read_questions_route(question: Annotated[Question, Depends(get_current_quest
     return result
 
 @router.put("/", response_model=QuestionRead)
-def update_question_route(
-    question: Annotated[str, Form(...)],
-    current_question: Annotated[Question, Depends(get_current_question)],
-    current_manager: Annotated[Manager, Depends(get_current_manager)],
-    session: Session = Depends(get_session)
-) -> QuestionRead:
+async def update_question_route(question: Annotated[str, Form(...)], current_question: Annotated[Question, Depends(get_current_question)], current_manager: Annotated[Manager, Depends(get_current_manager)], embedding_model: Annotated[LLMModel, Depends(get_embedding_llm)], session: Session = Depends(get_session)) -> QuestionRead:
     if not current_question:
         raise HTTPException(status_code=400, detail="question_id query parameter required")
     try:
@@ -79,7 +75,7 @@ def update_question_route(
         raise HTTPException(status_code=422, detail=e.errors())
     validated_question = get_validated_question(question_obj)
     question_data = Question(**validated_question.model_dump())
-    return update_question(session, question_data, current_question, current_manager)
+    return await update_question(session, question_data, current_question, current_manager, embedding_model)
 
 @router.delete("/", response_model=dict)
 def delete_question_route(current_question: Annotated[Question, Depends(get_current_question)], session: Session = Depends(get_session)) -> dict:
@@ -95,3 +91,17 @@ def get_question_image(current_question: Annotated[Question, Depends(get_current
     if not current_question.image_path or not os.path.exists(current_question.image_path):
         raise HTTPException(status_code=404, detail="Image not found")
     return FileResponse(current_question.image_path)
+
+@router.get("/{question_id}/clues", response_model=Clues)
+async def get_clues_route(current_question: Annotated[Question, Depends(get_current_question)], clues_llm: Annotated[LLMModel, Depends(get_clues_llm)], embedding_model: Annotated[LLMModel, Depends(get_embedding_llm)], session: Annotated[Session, Depends(get_session)]) -> Clues:
+    if clues_llm is None or embedding_model is None:
+        raise HTTPException(status_code=503, detail="LLM service is not activated")
+    
+    nearest_questions = get_nearest_questions(session, current_question)
+
+    prompt = f"{current_question.exercise}\n\n"
+    if nearest_questions:
+        prompt += f"context: {nearest_questions}\n\n"
+    prompt += "Vérifie bien que la réponse N'EST PAS dans les indices que tu donnes."
+
+    return await clues_llm.generate(current_question.exercise["question"], format=Clues)

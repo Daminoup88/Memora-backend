@@ -6,6 +6,8 @@ class Database:
         if database_name is not None:
             settings.database_name = database_name
         self.create_database_if_not_exists()
+        if settings.llm_enabled:
+            self.create_vector_extension_if_not_exists()
 
     @property
     def DATABASE_URL(self):
@@ -37,11 +39,20 @@ class Database:
                 query = text(f"CREATE DATABASE {settings.database_name}")
                 connection.execute(query)
                 logger.info(f"The database '{settings.database_name}' has been successfully created.")
-                query = text("CREATE EXTENSION IF NOT EXISTS vector")
-                connection.execute(query)
-                logger.info("The 'vector' extension has been successfully created.")
         except Exception as e:
             logger.error(f"An error occurred: {e}")
+
+    def create_vector_extension_if_not_exists(self): # pragma: no cover
+        """Create the vector extension if it does not exist."""
+        try:
+            engine = create_engine(self.DATABASE_URL)
+            with engine.connect() as connection:
+                connection.execution_options(isolation_level="AUTOCOMMIT")
+                query = text("CREATE EXTENSION IF NOT EXISTS vector")
+                connection.execute(query)
+                logger.info("The 'vector' extension has been successfully created if it did not exist.")
+        except Exception as e:
+            logger.error(f"An error occurred while creating the vector extension: {e}")
     
     def drop_database(self): # pragma: no cover
         """Drop the database."""
