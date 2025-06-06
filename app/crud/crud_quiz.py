@@ -69,7 +69,7 @@ def create_leitner_quiz(number_of_questions: int, current_account: Account, sess
             Quiz.created_at < func.now() - LeitnerParameters.leitner_delay
         ).order_by(
             QuizQuestion.box_number.asc()
-        ).limit(number_of_questions - len(never_answered))
+        ).limit(max(0, number_of_questions - len(never_answered)))
     ).all()
     
     leitner_questions = []

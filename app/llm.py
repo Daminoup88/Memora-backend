@@ -94,4 +94,4 @@ class LLMModel(AsyncClient):
             await self.initialize()
         kwargs['model'] = self.model_name
         response = await super().embed(input=prompt, **kwargs)
-        return response['embeddings']
+        return response['embeddings'][0]
