@@ -176,3 +176,5 @@ key.pem
 
 # vscode
 .vscode/
+
+.ollama/

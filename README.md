@@ -1,42 +1,96 @@
-# SanteActive backend
+# Memora backend
 
-API of the SanteActive project using FastAPI.
+API of the Memora project using FastAPI.
 
 ## Getting Started
 
 ### Prerequisites
 
+Docker: [Using Docker](#installation-with-docker) (recommended)
+
+OR
+
 - Python 3.10+
 - PostgreSQL with pgvector extension
 - Ollama
 
-### Installation
+### Installation with Docker
+See [Installation without Docker](#installation-without-docker-tested-on-windows) below.
+
+1. Make sure you have [Docker Desktop](https://www.docker.com/products/docker-desktop/) installed and running.
+
+2. Clone the repository
+
+```bash
+git clone https://github.com/Lucari00/Memora-backend.git
+```
+
+3. Navigate to the project directory
+
+```bash
+cd Memora-backend
+```
+
+For **development**, you can use the [`docker-compose-dev.yml`](docker-compose-dev.yml) file, which includes a PostgreSQL database and Ollama.
+
+For **production**, file in construction for now.
+
+4. Either create a `.env` file in the root directory with your personal information or add them in the docker compose file. It should contain the following information:
+
+```bash
+DATABASE_DRIVER=postgresql
+DATABASE_PORT=5432
+DATABASE_NAME=memora
+
+TOKEN_SECRET_KEY=secret
+TOKEN_ALGORITHM=HS256
+
+PASSWORD_ALGORITHM=sha256_crypt
+
+LLM_ENABLED=True
+```
+
+5. Change the secret key in the `.env` file to a strong, unique value. You can generate a secure secret key using Python:
+
+```bash
+python -c "import secrets; print(secrets.token_hex(32))"
+```
+
+6. Replace `DATABASE_USER`, `DATABASE_PASSWORD`, `POSTGRES_USER`, and `POSTGRES_PASSWORD` in the docker compose file with your personal information.
+
+### Installation without Docker (tested on Windows)
 
 1. Clone the repository
 
 ```bash
-git clone https://github.com/Lucari00/SanteActive-backend.git
+git clone https://github.com/Lucari00/Memora-backend.git
 ```
 
-2. Setup a virtual environment
+2. Navigate to the project directory
+
+```bash
+cd Memora-backend
+```
+
+3. Setup a virtual environment
 
 ```bash
 python -m venv .venv
 ```
 
-3. Activate the virtual environment
+4. Activate the virtual environment
 
 ```bash
 .venv\Scripts\activate
 ```
 
-4. Install the dependencies
+5. Install the dependencies
 
 ```bash
 pip install -r requirements.txt
 ```
 
-5. Add the ".env" file in the root directory with your personal information:
+6. Add the ".env" file in the root directory with your personal information:
   
 ```bash
 DATABASE_DRIVER=postgresql
@@ -50,9 +104,12 @@ TOKEN_SECRET_KEY=secret
 TOKEN_ALGORITHM=HS256
 
 PASSWORD_ALGORITHM=sha256_crypt
+
+LLM_ENABLED=True
+LLM_HOST=localhost
 ```
 
-6. Run the server
+7. Run the server
 
 ```bash
 fastapi run --reload --host 0.0.0.0 --port 8000

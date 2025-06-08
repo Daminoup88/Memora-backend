@@ -17,6 +17,7 @@ class Settings(BaseSettings):
     password_algorithm: str
 
     llm_enabled: bool = False
+    llm_host: str = "localhost"
 
     model_config = SettingsConfigDict(env_file='.env', extra='ignore')
 
@@ -72,6 +73,7 @@ Voici le format de sortie attendu :
 llm_questions_system = """"""
 
 class LLMSettings(BaseSettings):
+    host: str = 'localhost'
     model_name: str
     is_custom: bool = False
     from_: Optional[str] = None
@@ -79,8 +81,8 @@ class LLMSettings(BaseSettings):
     template: Optional[str] = None
     system: Optional[str] = None
 
-clues_model_settings = LLMSettings(model_name="mistral-indices", is_custom=True, from_="mistral:latest", parameters=llm_parameters, template=llm_template, system=llm_clues_system)
+clues_model_settings = LLMSettings(host=settings.llm_host, model_name="mistral-indices", is_custom=True, from_="mistral:latest", parameters=llm_parameters, template=llm_template, system=llm_clues_system)
 
-questions_model_settings = LLMSettings(model_name="mistral-questions", is_custom=True, from_="mistral:latest", parameters=llm_parameters, template=llm_template, system=llm_questions_system)
+questions_model_settings = LLMSettings(host=settings.llm_host, model_name="mistral-questions", is_custom=True, from_="mistral:latest", parameters=llm_parameters, template=llm_template, system=llm_questions_system)
 
-embedding_model_settings = LLMSettings(model_name="nomic-embed-text")
+embedding_model_settings = LLMSettings(host=settings.llm_host, model_name="nomic-embed-text")

@@ -1,4 +1,4 @@
-from fastapi import APIRouter, HTTPException, Depends, UploadFile, File, Request, Form
+from fastapi import APIRouter, HTTPException, Depends, UploadFile, File, Request, Form, BackgroundTasks
 from sqlmodel import Session
 from app.schemas.schema_question import QuestionCreate, QuestionRead, QuestionUpdate, Clues
 from app.dependencies import get_current_account, get_session, get_current_manager, get_validated_question, get_current_question, get_clues_llm, get_embedding_llm
@@ -22,7 +22,7 @@ def get_image_url(request: Request, question):
     return None
 
 @router.post("/", response_model=QuestionRead)
-async def create_question_route(question: Annotated[str, Form(...)], current_manager: Annotated[Manager, Depends(get_current_manager)], embedding_model: Annotated[LLMModel, Depends(get_embedding_llm)], session: Annotated[Session, Depends(get_session)], image: UploadFile = File(None)) -> QuestionRead:
+async def create_question_route(question: Annotated[str, Form(...)], current_manager: Annotated[Manager, Depends(get_current_manager)], embedding_model: Annotated[LLMModel, Depends(get_embedding_llm)], session: Annotated[Session, Depends(get_session)], background_tasks: BackgroundTasks, image: UploadFile = File(None)) -> QuestionRead:
     try:
         question_dict = json.loads(question)
     except Exception:
@@ -45,7 +45,7 @@ async def create_question_route(question: Annotated[str, Form(...)], current_man
             f.write(image.file.read())
         question_data["image_path"] = file_path
     question_to_create = Question(**question_data)
-    return await create_question(session, question_to_create, current_manager, embedding_model)
+    return await create_question(session, question_to_create, current_manager, embedding_model, background_tasks)
 
 @router.get("/", response_model=List[QuestionRead] | QuestionRead, description="Returns all questions or a specific question if question_id query parameter is provided.")
 def read_questions_route(question: Annotated[Question, Depends(get_current_question)], current_account: Annotated[Account, Depends(get_current_account)], session: Session = Depends(get_session), request: Request = None) -> List[QuestionRead] | QuestionRead:
@@ -62,7 +62,7 @@ def read_questions_route(question: Annotated[Question, Depends(get_current_quest
     return result
 
 @router.put("/", response_model=QuestionRead)
-async def update_question_route(question: Annotated[str, Form(...)], current_question: Annotated[Question, Depends(get_current_question)], current_manager: Annotated[Manager, Depends(get_current_manager)], embedding_model: Annotated[LLMModel, Depends(get_embedding_llm)], session: Session = Depends(get_session)) -> QuestionRead:
+async def update_question_route(question: Annotated[str, Form(...)], current_question: Annotated[Question, Depends(get_current_question)], current_manager: Annotated[Manager, Depends(get_current_manager)], embedding_model: Annotated[LLMModel, Depends(get_embedding_llm)], session: Annotated[Session, Depends(get_session)], background_tasks: BackgroundTasks) -> QuestionRead:
     if not current_question:
         raise HTTPException(status_code=400, detail="question_id query parameter required")
     try:
@@ -75,10 +75,10 @@ async def update_question_route(question: Annotated[str, Form(...)], current_que
         raise HTTPException(status_code=422, detail=e.errors())
     validated_question = get_validated_question(question_obj)
     question_data = Question(**validated_question.model_dump())
-    return await update_question(session, question_data, current_question, current_manager, embedding_model)
+    return await update_question(session, question_data, current_question, current_manager, embedding_model, background_tasks)
 
 @router.delete("/", response_model=dict)
-def delete_question_route(current_question: Annotated[Question, Depends(get_current_question)], session: Session = Depends(get_session)) -> dict:
+def delete_question_route(current_question: Annotated[Question, Depends(get_current_question)], session: Annotated[Session, Depends(get_session)]) -> dict:
     if not current_question:
         raise HTTPException(status_code=400, detail="question_id query parameter required")
     if current_question.image_path and os.path.exists(current_question.image_path):

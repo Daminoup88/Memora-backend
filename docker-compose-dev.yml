@@ -1,0 +1,57 @@
+name: memora-backend
+
+services:
+  api:
+    container_name: api
+    build: .
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./:/usr/src/app:ro
+      - ./media:/usr/src/app/media:rw
+    env_file:
+      - ./.env
+    environment:
+      - DATABASE_USER=user
+      - DATABASE_PASSWORD=password
+      - DATABASE_HOST=postgres
+      - LLM_HOST=ollama
+      
+    command: fastapi run --reload --host 0.0.0.0 --port 8000
+    depends_on:
+      - postgres
+      - ollama
+
+  postgres:
+    container_name: postgres
+    image: pgvector/pgvector:pg17
+    ports:
+      - "5432:5432"
+    environment:
+      - POSTGRES_USER=user
+      - POSTGRES_PASSWORD=password
+    volumes:
+      - memora_database:/var/lib/postgresql/data
+
+  ollama:
+    container_name: ollama
+    ports:
+      - "11434:11434"
+    volumes:
+      - ./.ollama/ollama:/root/.ollama
+    pull_policy: always
+    tty: true
+    restart: unless-stopped
+    image: ollama/ollama:latest
+    environment:
+      - OLLAMA_KEEP_ALIVE=24h
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all 
+              capabilities: [gpu]
+
+volumes:
+  memora_database:

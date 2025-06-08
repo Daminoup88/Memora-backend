@@ -1,5 +1,6 @@
 from sqlalchemy import create_engine, text
 from app.config import logger, settings
+import time
 
 class Database:
     def __init__(self, database_name=None):
@@ -20,11 +21,23 @@ class Database:
         return f"{settings.database_driver}://{settings.database_user}:{settings.database_password}@{settings.database_host}:{settings.database_port}/"
 
     def database_exists(self):
-        """Check if the database already exists."""
-        engine = create_engine(self.DATABASE_SERVER)
-        with engine.connect() as connection:
-            result = connection.execute(text(f"SELECT 1 FROM pg_database WHERE datname = '{settings.database_name}'"))
-            return result.fetchone() is not None
+        """Check if the database already exists, retrying on failure."""
+        retries = 0
+        while True:
+            try:
+                engine = create_engine(self.DATABASE_SERVER)
+                with engine.connect() as connection:
+                    result = connection.execute(text(f"SELECT 1 FROM pg_database WHERE datname = '{settings.database_name}'"))
+                    return result.fetchone() is not None
+            except Exception as e:
+                logger.error(f"Database connection failed: {e}")
+                retries += 1
+                logger.info("Retrying in 30 seconds...")
+                logger.debug(f"Retried {retries} times")
+                # if tries >= 3:
+                #     logger.error("Failed to connect to the database after 3 attempts.")
+                #     raise
+                time.sleep(30)
 
     def create_database_if_not_exists(self): # pragma: no cover
         """Create the database if it does not exist."""
