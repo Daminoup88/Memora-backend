@@ -1,5 +1,6 @@
 from sqlmodel import SQLModel
 from datetime import datetime
+from app.schemas.schema_pagination import PaginatedResponse
 
 class ManagerRead(SQLModel):
     id: int
@@ -20,5 +21,7 @@ class ManagerUpdate(SQLModel):
     firstname: str
     lastname: str
     relationship: str
-    email: str 
-    #TODO pp_path: str
+    email: str
+
+# Alias pour la réponse paginée de managers
+PaginatedManagersResponse = PaginatedResponse[ManagerRead]

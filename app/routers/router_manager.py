@@ -1,10 +1,10 @@
-from fastapi import APIRouter, HTTPException, Depends, UploadFile, File
+from fastapi import APIRouter, HTTPException, Depends, UploadFile, File, Query
 from sqlmodel import Session
 from app.models.model_tables import Account, Manager
-from app.schemas.schema_manager import ManagerRead, ManagerCreate, ManagerUpdate
+from app.schemas.schema_manager import ManagerRead, ManagerCreate, ManagerUpdate, PaginatedManagersResponse
 from app.dependencies import get_session, get_current_account, get_current_manager
 from app.crud.crud_manager import create_manager, update_manager, delete_manager, read_managers, save_manager_profile_picture
-from typing import Annotated
+from typing import Annotated, Optional, Union
 from fastapi.responses import FileResponse
 import os
 
@@ -22,12 +22,24 @@ def create_manager_route(manager: ManagerCreate, current_account: Annotated[Acco
     created_manager = create_manager(session, manager_to_create, current_account)
     return ManagerRead(**created_manager.model_dump())
 
-@router.get("/", response_model=list[ManagerRead])
-def read_managers_route(current_account: Annotated[Account, Depends(get_current_account)], session: Annotated[Session, Depends(get_session)]) -> list[ManagerRead]:
-    managers = read_managers(session, current_account)
-
-    managers_read = [ManagerRead(**manager.model_dump()) for manager in managers]
+@router.get("/", response_model=Union[list[ManagerRead], PaginatedManagersResponse])
+def read_managers_route(
+    current_account: Annotated[Account, Depends(get_current_account)], 
+    session: Annotated[Session, Depends(get_session)],
+    page: Optional[int] = Query(None, ge=1, description="Page number (starts at 1)"),
+    size: Optional[int] = Query(None, ge=1, le=100, description="Items per page (max 100)")
+) -> Union[list[ManagerRead], PaginatedManagersResponse]:
+    result = read_managers(session, current_account, page, size)
     
+    # Si pagination demandée, retourner une réponse paginée
+    if page is not None and size is not None:
+        managers, meta = result
+        managers_read = [ManagerRead(**manager.model_dump()) for manager in managers]
+        return PaginatedManagersResponse(items=managers_read, meta=meta)
+    
+    # Sinon, comportement original pour la compatibilité
+    managers = result
+    managers_read = [ManagerRead(**manager.model_dump()) for manager in managers]
     return managers_read
 
 @router.get("/{manager_id}", response_model=ManagerRead)

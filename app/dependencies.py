@@ -18,6 +18,13 @@ from app.schemas.schema_quiz import ResultRead
 from pydantic import ValidationError as PydanticValidationError
 from app.llm import LLMModel
 
+# Image URL helper
+def get_image_url(base_url: str, question: Question) -> str | None:
+    """Helper function to generate image URL for a question"""
+    if question.image_path:
+        return f"{base_url}api/questions/{question.id}/image"
+    return None
+
 # Database
 engine = create_engine(database.DATABASE_URL)
 

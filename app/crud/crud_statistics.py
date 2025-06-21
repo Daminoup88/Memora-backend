@@ -39,7 +39,8 @@ def calculate_statistics(session: Session, account_id: int) -> dict:
     
     category_success_rate = {
         stat.category: round((stat.correct / stat.total) * 100, 2) if stat.total > 0 else 0
-        for stat in category_stats    }
+        for stat in category_stats
+    }
     
     # Question success rates - aggregated by question_id
     question_stats = session.exec(
@@ -57,7 +58,8 @@ def calculate_statistics(session: Session, account_id: int) -> dict:
     
     question_success_rate = {
         stat.id: round((stat.correct / stat.total) * 100, 2) if stat.total > 0 else 0
-        for stat in question_stats    }
+        for stat in question_stats
+    }
     
     # Leitner box numbers - get the latest box number for each question
     # Since QuizQuestion doesn't have an id, we'll get the most recent entry per question
@@ -68,7 +70,8 @@ def calculate_statistics(session: Session, account_id: int) -> dict:
         )
         .join(Question, QuizQuestion.question_id == Question.id)
         .where(Question.account_id == account_id, QuizQuestion.result_id.is_not(None))
-        .distinct(QuizQuestion.question_id)    ).all()
+        .distinct(QuizQuestion.question_id)
+    ).all()
     
     # Keep the box number for each question (distinct already handles uniqueness)
     leitner_box_numbers = {
@@ -76,7 +79,7 @@ def calculate_statistics(session: Session, account_id: int) -> dict:
         for stat in leitner_stats 
         if stat.box_number is not None
     }
-
+    
     return {
         "global_success_rate": global_success_rate,
         "category_success_rate": category_success_rate,
