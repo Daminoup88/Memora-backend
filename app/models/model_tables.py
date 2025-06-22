@@ -66,6 +66,7 @@ class RawData(BaseTable, table=True):
     created_by: Optional[int] = Field(foreign_key="manager.id", nullable=True, ondelete="SET NULL")
     edited_by: Optional[int] = Field(foreign_key="manager.id", nullable=True, ondelete="SET NULL")
     file_path: Optional[str] = Field(default=None, description="raw data file path")
+    used_for_generation: bool = Field(default=False, description="indicates if the raw data was used for question generation")
 
 
 class Result(BaseTable, table=True):

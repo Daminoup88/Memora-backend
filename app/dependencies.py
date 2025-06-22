@@ -2,7 +2,7 @@ from sqlmodel import Session, create_engine
 from sqlalchemy import select
 from app.database import database
 from typing import Generator
-from app.models.model_tables import Account, Manager, Question, Quiz, Result, QuizQuestion
+from app.models.model_tables import Account, Manager, Question, Quiz, Result, QuizQuestion, RawData
 from app.crud.crud_account import read_account_by_id, read_account_by_username
 from app.config import pwd_context, settings, json_schema_dir, clues_model_settings, questions_model_settings, embedding_model_settings
 from fastapi.security import OAuth2PasswordBearer
@@ -212,6 +212,23 @@ answer_checker = AnswerChecker()
 
 def get_validated_answer(answer: Annotated[Result, Depends(answer_checker)]) -> Result:
     return answer
+
+class RawDataChecker:
+    def __init__(self):
+        pass
+
+    def __call__(self, session: Annotated[Session, Depends(get_session)], current_account: Annotated[Account, Depends(get_current_account)], raw_data_id: int) -> RawData:
+        raw_data = session.get(RawData, raw_data_id)
+        if not raw_data:
+            raise HTTPException(status_code=404, detail="Raw data not found")
+        if raw_data.account_id != current_account.id:
+            raise HTTPException(status_code=403, detail="Not authorized to perform this action")
+        return raw_data
+
+raw_data_checker = RawDataChecker()
+
+def get_current_raw_data(raw_data: Annotated[RawData, Depends(raw_data_checker)]) -> RawData:
+    return raw_data
 
 # LLM dependencies
 

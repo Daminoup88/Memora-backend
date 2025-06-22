@@ -1,9 +1,9 @@
 from fastapi import APIRouter, HTTPException, Depends, UploadFile, File, Request, Form, BackgroundTasks, Query
 from sqlmodel import Session
-from app.schemas.schema_question import QuestionCreate, QuestionRead, QuestionUpdate, Clues, PaginatedQuestionsResponse
-from app.dependencies import get_current_account, get_session, get_current_manager, get_validated_question, get_current_question, get_clues_llm, get_embedding_llm
-from app.models.model_tables import Account, Manager, Question
-from app.crud.crud_questions import create_question, read_questions, update_question, delete_question, get_nearest_questions
+from app.schemas.schema_question import QuestionCreate, QuestionRead, QuestionUpdate, Clues, PaginatedQuestionsResponse, RawDataRead
+from app.dependencies import get_current_account, get_session, get_current_manager, get_validated_question, get_current_question, get_clues_llm, get_embedding_llm, get_current_raw_data
+from app.models.model_tables import Account, Manager, Question, RawData
+from app.crud.crud_questions import create_question, read_questions, update_question, delete_question, get_nearest_questions, create_raw_data, get_raw_data
 from typing import List, Annotated, Optional, Union
 from jsonschema import validate, ValidationError
 from fastapi.responses import FileResponse
@@ -12,17 +12,23 @@ import json
 from pydantic import ValidationError as PydanticValidationError
 from app.llm import LLMModel
 
-MEDIA_ROOT = "media/question_images"
+QUESTION_IMAGES_ROOT = "media/question_images"
+RAW_DATA_ROOT = "media/raw_data"
 
 router = APIRouter()
 
-def get_image_url(request: Request, question):
+def get_image_url(request: Request, question: Question):
     if question.image_path:
         return str(request.base_url) + f"api/questions/{question.id}/image"
     return None
 
+def get_file_url(request: Request, raw_data: RawData):
+    if raw_data.file_path:
+        return str(request.base_url) + f"api/questions/data/{raw_data.id}/file"
+    return None
+
 @router.post("/", response_model=QuestionRead)
-async def create_question_route(question: Annotated[str, Form(...)], current_manager: Annotated[Manager, Depends(get_current_manager)], embedding_model: Annotated[LLMModel, Depends(get_embedding_llm)], session: Annotated[Session, Depends(get_session)], background_tasks: BackgroundTasks, image: UploadFile = File(None)) -> QuestionRead:
+def create_question_route(question: Annotated[str, Form(...)], current_manager: Annotated[Manager, Depends(get_current_manager)], embedding_model: Annotated[LLMModel, Depends(get_embedding_llm)], session: Annotated[Session, Depends(get_session)], background_tasks: BackgroundTasks, image: UploadFile = File(None)) -> QuestionRead:
     try:
         question_dict = json.loads(question)
     except Exception:
@@ -38,14 +44,14 @@ async def create_question_route(question: Annotated[str, Form(...)], current_man
         ext = os.path.splitext(image.filename)[1].lower()
         if ext not in allowed_exts:
             raise HTTPException(status_code=400, detail="Only .png, .jpeg, .jpg files are allowed")
-        os.makedirs(MEDIA_ROOT, exist_ok=True)
+        os.makedirs(QUESTION_IMAGES_ROOT, exist_ok=True)
         filename = f"question_{current_manager.id}_{image.filename}"
-        file_path = os.path.join(MEDIA_ROOT, filename)
+        file_path = os.path.join(QUESTION_IMAGES_ROOT, filename)
         with open(file_path, "wb") as f:
             f.write(image.file.read())
         question_data["image_path"] = file_path
     question_to_create = Question(**question_data)
-    return await create_question(session, question_to_create, current_manager, embedding_model, background_tasks)
+    return create_question(session, question_to_create, current_manager, embedding_model, background_tasks)
 
 @router.get("/", response_model=Union[List[QuestionRead], QuestionRead, PaginatedQuestionsResponse], description="Returns all questions (with optional pagination) or a specific question if question_id query parameter is provided.")
 def read_questions_route(
@@ -73,7 +79,7 @@ def read_questions_route(
     return result
 
 @router.put("/", response_model=QuestionRead)
-async def update_question_route(question: Annotated[str, Form(...)], current_question: Annotated[Question, Depends(get_current_question)], current_manager: Annotated[Manager, Depends(get_current_manager)], embedding_model: Annotated[LLMModel, Depends(get_embedding_llm)], session: Annotated[Session, Depends(get_session)], background_tasks: BackgroundTasks) -> QuestionRead:
+def update_question_route(question: Annotated[str, Form(...)], current_question: Annotated[Question, Depends(get_current_question)], current_manager: Annotated[Manager, Depends(get_current_manager)], embedding_model: Annotated[LLMModel, Depends(get_embedding_llm)], session: Annotated[Session, Depends(get_session)], background_tasks: BackgroundTasks) -> QuestionRead:
     if not current_question:
         raise HTTPException(status_code=400, detail="question_id query parameter required")
     try:
@@ -86,7 +92,7 @@ async def update_question_route(question: Annotated[str, Form(...)], current_que
         raise HTTPException(status_code=422, detail=e.errors())
     validated_question = get_validated_question(question_obj)
     question_data = Question(**validated_question.model_dump())
-    return await update_question(session, question_data, current_question, current_manager, embedding_model, background_tasks)
+    return update_question(session, question_data, current_question, current_manager, embedding_model, background_tasks)
 
 @router.delete("/", response_model=dict)
 def delete_question_route(current_question: Annotated[Question, Depends(get_current_question)], session: Annotated[Session, Depends(get_session)]) -> dict:
@@ -116,3 +122,74 @@ async def get_clues_route(current_question: Annotated[Question, Depends(get_curr
     prompt += "Vérifie bien que la réponse N'EST PAS dans les indices que tu donnes."
 
     return await clues_llm.generate(current_question.exercise["question"], format=Clues)
+
+@router.post("/data", response_model=RawDataRead)
+def import_data_route(
+    text: Annotated[str, Form(...)], 
+    current_account: Annotated[Account, Depends(get_current_account)], 
+    current_manager: Annotated[Manager, Depends(get_current_manager)],
+    session: Annotated[Session, Depends(get_session)], 
+    background_tasks: BackgroundTasks,
+    file: UploadFile = File(None),
+    request: Request = None
+) -> RawDataRead:
+    file_path = None
+    if file:
+        os.makedirs(RAW_DATA_ROOT, exist_ok=True)
+        file_path = os.path.join(RAW_DATA_ROOT, f"raw_data")
+
+    raw_data = create_raw_data(
+        session=session,
+        text=text,
+        current_account=current_account,
+        current_manager=current_manager,
+        file_path=file_path,
+        filename=file.filename if file else None,
+        embedding_model=get_embedding_llm(),
+        background_tasks=background_tasks
+    )
+
+    if file:
+        file_path=raw_data.file_path
+        with open(file_path, "wb") as f:
+            f.write(file.file.read())
+
+    return RawDataRead(
+        id=raw_data.id,
+        text=raw_data.text,
+        created_at=raw_data.created_at,
+        updated_at=raw_data.updated_at,
+        created_by=raw_data.created_by,
+        edited_by=raw_data.edited_by,
+        image_url=get_file_url(request, raw_data)
+    )
+
+@router.get("/data", response_model=list[RawDataRead])
+def get_raw_data_route(
+    current_account: Annotated[Account, Depends(get_current_account)],
+    session: Annotated[Session, Depends(get_session)],
+    request: Request = None
+) -> list[RawDataRead]:
+    raw_data_list = get_raw_data(session, current_account)
+    if raw_data_list is None:
+        return []
+    raw_data_read_list = []
+    for raw_data in raw_data_list:
+        raw_data_read_list.append(RawDataRead(
+            id=raw_data.id,
+            text=raw_data.text,
+            created_at=raw_data.created_at,
+            updated_at=raw_data.updated_at,
+            created_by=raw_data.created_by,
+            edited_by=raw_data.edited_by,
+            image_url=get_file_url(request, raw_data)
+        ))
+    return raw_data_read_list
+
+@router.get("/data/{raw_data_id}/file")
+def get_raw_data_file_route(
+    raw_data: Annotated[RawData, Depends(get_current_raw_data)]
+) -> FileResponse:
+    if not raw_data.file_path or not os.path.exists(raw_data.file_path):
+        raise HTTPException(status_code=404, detail="File not found")
+    return FileResponse(raw_data.file_path)

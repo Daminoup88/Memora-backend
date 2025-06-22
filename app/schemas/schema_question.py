@@ -24,5 +24,14 @@ class QuestionUpdate(QuestionCreate):
 class Clues(SQLModel):
     clues: list[str]
 
+class RawDataRead(SQLModel):
+    id: int
+    text: str
+    created_at: datetime
+    updated_at: datetime
+    created_by: int | None = None
+    edited_by: int | None = None
+    image_url: str | None = None
+
 # Alias pour la réponse paginée de questions
 PaginatedQuestionsResponse = PaginatedResponse[QuestionRead]

@@ -1,6 +1,6 @@
 from sqlmodel import Session, select, func
 from fastapi import HTTPException, BackgroundTasks
-from app.models.model_tables import Question, Account, Manager
+from app.models.model_tables import Question, Account, Manager, RawData
 from app.llm import LLMModel
 from app.config import logger
 from app.schemas.schema_pagination import PaginationMeta
@@ -17,7 +17,12 @@ async def calculate_embedding_in_background(question: Question, session: Session
     session.commit()
     logger.debug(f"Embedding calculated in background for question ID {question.id}")
 
-async def create_question(session: Session, question: Question, current_manager: Manager, embedding_model: LLMModel, background_tasks: BackgroundTasks) -> Question:
+async def calculate_raw_data_embedding_in_background(raw_data: RawData, session: Session, embedding_model: LLMModel):
+    raw_data.embedding = await embedding_model.embed(raw_data.text)
+    session.commit()
+    logger.debug(f"Embedding calculated in background for raw data ID {raw_data.id}")
+
+def create_question(session: Session, question: Question, current_manager: Manager, embedding_model: LLMModel, background_tasks: BackgroundTasks) -> Question:
     question.created_by = current_manager.id
     question.edited_by = current_manager.id
     question.account_id = current_manager.account_id
@@ -53,7 +58,7 @@ def read_questions(session: Session, current_account: Account, base_url: str, pa
         page=page, size=size, total=total, pages=pages
     )
 
-async def update_question(session: Session, question_data: Question, current_question: Question, current_manager: Manager, embedding_model: LLMModel, background_tasks: BackgroundTasks) -> Question:
+def update_question(session: Session, question_data: Question, current_question: Question, current_manager: Manager, embedding_model: LLMModel, background_tasks: BackgroundTasks) -> Question:
     question_data.edited_by = current_manager.id
 
     for key, value in question_data.model_dump().items():
@@ -81,3 +86,30 @@ def get_nearest_questions(session: Session, current_question: Question, limit: i
     ).all()
 
     return nearest_questions
+
+def create_raw_data(session: Session, text: str, current_account: Account, current_manager: Manager, file_path: str = None, filename: str = None, embedding_model: LLMModel = None, background_tasks: BackgroundTasks = None) -> RawData:
+    raw_data = RawData(
+        account_id=current_account.id,
+        text=text,
+        created_by=current_manager.id,
+        edited_by=current_manager.id,
+        file_path=f"{file_path}_{filename}" if file_path and filename else None,
+    )
+    
+    session.add(raw_data)
+    session.commit()
+    session.refresh(raw_data)
+
+    if file_path and filename:
+        raw_data.file_path = f"{file_path}_{str(raw_data.id)}_{filename}"
+        session.commit()
+    
+    if embedding_model is not None and background_tasks is not None:
+        background_tasks.add_task(calculate_raw_data_embedding_in_background, raw_data, session, embedding_model)
+
+    return raw_data
+
+def get_raw_data(session: Session, current_accout: Account) -> list[RawData]:    
+    return session.exec(
+        select(RawData).where(RawData.account_id == current_accout.id)
+    ).all()
