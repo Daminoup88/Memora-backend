@@ -133,7 +133,6 @@ def get_latest_quiz_remaining_questions(current_account: Account, session: Sessi
     for question in questions:
         q_dict = question.model_dump()
         q_dict["image_url"] = get_image_url(base_url, question)
-        print(q_dict)
         questions_read.append(QuestionRead(**q_dict))
     return QuizRead(id=latest_quiz_id, questions=questions_read)
 

@@ -379,7 +379,6 @@ def test_create_account_and_patient(client: TestClient, session: Session):
     )
     assert response.status_code == 200
     data = response.json()
-    print(data)
     # Validate account response
     assert data["username"] == ACCOUNT1["username"]
     assert "password" not in data

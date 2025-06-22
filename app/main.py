@@ -88,7 +88,7 @@ def populate_default_questions():
             session.commit()
 
 def populate_leitner_parameters():
-    delays = ["1 day", "2 days", "3 days", "4 days", "7 days", "14 days", "30 days"]
+    delays = ["0 seconds", "1 day", "2 days", "4 days", "7 days", "14 days", "30 days"]
     with Session(engine) as session:
         table_count = session.exec(select(func.count(LeitnerParameters.box_number))).first()
         if table_count == 0:

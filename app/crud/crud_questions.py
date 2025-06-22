@@ -76,7 +76,7 @@ def delete_question(session: Session, current_question: Question) -> bool:
 
 def get_nearest_questions(session: Session, current_question: Question, limit: int = 5) -> list[Question]:
     if current_question.embedding is None:
-        raise HTTPException(status_code=400, detail="Question does not have an embedding")
+        raise HTTPException(status_code=503, detail="Question does not have an embedding")
 
     nearest_questions = session.exec(
         select(Question.exercise)
