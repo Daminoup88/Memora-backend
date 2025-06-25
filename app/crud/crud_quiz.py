@@ -61,8 +61,10 @@ def create_leitner_quiz(number_of_questions: int, current_account: Account, sess
             LeitnerParameters, QuizQuestion.box_number == LeitnerParameters.box_number
         ).join(
             Quiz, Quiz.id == QuizQuestion.quiz_id
-        ).where(
-            Quiz.created_at < func.now() - LeitnerParameters.leitner_delay
+        )
+        .where(
+            True
+            # Quiz.created_at <= func.now() - LeitnerParameters.leitner_delay
         ).order_by(
             QuizQuestion.box_number.asc()
         ).limit(max(0, number_of_questions - len(never_answered)))

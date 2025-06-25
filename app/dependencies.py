@@ -242,10 +242,10 @@ def get_clues_llm() -> LLMModel:
         return None
     return clues_llm
 
-# def get_questions_llm() -> LLMModel:
-#     if not settings.llm_enabled:
-#        return None
-#     return questions_llm
+def get_questions_llm() -> LLMModel:
+    if not settings.llm_enabled:
+       return None
+    return questions_llm
 
 def get_embedding_llm() -> LLMModel:
     if not settings.llm_enabled:

@@ -70,7 +70,11 @@ Voici le format de sortie attendu :
   ]
 }"""
 
-llm_questions_system = """"""
+llm_questions_system = """Tu es un assistant spécialisé dans la génération de questions pour des personnes atteintes d'Alzheimer. Tu génères des questions éducatives basées sur un contexte donné.
+
+Créé une question adaptée aux capacités cognitives des personnes atteintes d'Alzheimer : simple, claire et stimulante pour la mémoire.
+
+Le format de réponse sera spécifié dans chaque demande."""
 
 class LLMSettings(BaseSettings):
     host: str = 'localhost'

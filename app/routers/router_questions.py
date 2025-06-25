@@ -3,7 +3,7 @@ from sqlmodel import Session
 from app.schemas.schema_question import QuestionCreate, QuestionRead, QuestionUpdate, Clues, PaginatedQuestionsResponse, RawDataRead
 from app.dependencies import get_current_account, get_session, get_current_manager, get_validated_question, get_current_question, get_clues_llm, get_embedding_llm, get_current_raw_data
 from app.models.model_tables import Account, Manager, Question, RawData
-from app.crud.crud_questions import create_question, read_questions, update_question, delete_question, get_nearest_questions, create_raw_data, get_raw_data
+from app.crud.crud_questions import create_question, read_questions, update_question, delete_question, get_nearest_questions, create_raw_data, get_raw_data, get_raw_data_cluster
 from typing import List, Annotated, Optional, Union
 from jsonschema import validate, ValidationError
 from fastapi.responses import FileResponse
@@ -51,7 +51,7 @@ def create_question_route(question: Annotated[str, Form(...)], current_manager: 
             f.write(image.file.read())
         question_data["image_path"] = file_path
     question_to_create = Question(**question_data)
-    return create_question(session, question_to_create, current_manager, embedding_model, background_tasks)
+    return create_question(session, question_to_create, current_manager=current_manager, embedding_model=embedding_model, background_tasks=background_tasks)
 
 @router.get("/", response_model=Union[List[QuestionRead], QuestionRead, PaginatedQuestionsResponse], description="Returns all questions (with optional pagination) or a specific question if question_id query parameter is provided.")
 def read_questions_route(
