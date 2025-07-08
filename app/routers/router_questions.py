@@ -121,7 +121,7 @@ async def get_clues_route(current_question: Annotated[Question, Depends(get_curr
         prompt += f"context: {nearest_questions}\n\n"
     prompt += "Vérifie bien que la réponse N'EST PAS dans les indices que tu donnes."
 
-    return await clues_llm.generate(current_question.exercise["question"], format=Clues)
+    return await clues_llm.generate(current_question.exercise, format=Clues)
 
 @router.post("/data", response_model=RawDataRead)
 def import_data_route(

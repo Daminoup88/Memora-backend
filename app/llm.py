@@ -6,6 +6,7 @@ from functools import wraps
 from fastapi import HTTPException, status
 from pydantic import BaseModel, ValidationError
 import time
+import json
 
 if sys.platform == "win32":
     asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
@@ -89,7 +90,7 @@ class LLMModel(AsyncClient):
     async def generate(self, prompt: str, format: type[BaseModel] = None, **kwargs):
         kwargs['model'] = self.model_name
         if format is not None:
-            response = await super().generate(prompt=prompt, format=format.model_json_schema(), **kwargs)
+            response = await super().generate(prompt=json.dumps(prompt), format=format.model_json_schema(), **kwargs)
             try:
                 formatted = format.model_validate_json(response['response'])
                 return formatted
