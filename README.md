@@ -10,14 +10,14 @@ Docker: [Using Docker](#installation-with-docker) (recommended)
 
 OR
 
-- Python 3.10+
-- PostgreSQL with pgvector extension
-- Ollama
+- [Python 3.10+](https://www.python.org/downloads/)
+- [PostgreSQL](https://www.postgresql.org/download/) with [pgvector extension](https://github.com/pgvector/pgvector#installation)
+- [Ollama](https://ollama.com/download)
 
 ### Installation with Docker
 See [Installation without Docker](#installation-without-docker-tested-on-windows) below.
 
-1. Make sure you have [Docker Desktop](https://www.docker.com/products/docker-desktop/) installed and running.
+1. Make sure you have a docker engine such as [Docker Desktop](https://www.docker.com/products/docker-desktop/) installed and running.
 
 2. Clone the repository
 
@@ -31,32 +31,47 @@ git clone https://github.com/Lucari00/Memora-backend.git
 cd Memora-backend
 ```
 
-For **development**, you can use the [`docker-compose-dev.yml`](docker-compose-dev.yml) file, which includes a PostgreSQL database and Ollama.
 
-For **production**, file in construction for now.
-
-4. Either create a `.env` file in the root directory with your personal information or add them in the docker compose file. It should contain the following information:
+4. Create a `.env` file from the example one:
 
 ```bash
-DATABASE_DRIVER=postgresql
-DATABASE_PORT=5432
-DATABASE_NAME=memora
-
-TOKEN_SECRET_KEY=secret
-TOKEN_ALGORITHM=HS256
-
-PASSWORD_ALGORITHM=sha256_crypt
-
-LLM_ENABLED=True
+cp .env.example .env
 ```
 
-5. Change the secret key in the `.env` file to a strong, unique value. You can generate a secure secret key using Python:
+5. **IMPORTANT**: Edit the `.env` file and set strong secrets (especially POSTGRES_PASSWORD and TOKEN_SECRET_KEY). You can generate a secure secret key using Python:
 
 ```bash
 python -c "import secrets; print(secrets.token_hex(32))"
 ```
 
-6. Replace `DATABASE_USER`, `DATABASE_PASSWORD`, `POSTGRES_USER`, and `POSTGRES_PASSWORD` in the docker compose file with your personal information.
+6. You can add the LLM features by setting LLM_ENABLED to True.
+
+7. Build and start:
+
+- In **PRODUCTION**:
+
+```bash
+docker compose up -d --build
+```
+
+or, with the legacy docker-compose executable:
+
+```bash
+docker-compose -f compose.yaml up -d --build
+```
+
+- For **DEVELOPMENT**:
+
+```bash
+docker compose -f compose-dev.yaml up -d --build
+```
+
+or, with the legacy docker-compose executable:
+
+```bash
+docker-compose -f compose-dev.yaml up -d --build
+```
+
 
 ### Installation without Docker (tested on Windows)
 
@@ -90,24 +105,19 @@ python -m venv .venv
 pip install -r requirements.txt
 ```
 
-6. Add the ".env" file in the root directory with your personal information:
-  
+6. Create a `.env` file from the example one:
+
 ```bash
-DATABASE_DRIVER=postgresql
-DATABASE_HOST=localhost
-DATABASE_PORT=5432
-DATABASE_USER=user
-DATABASE_PASSWORD=password
-DATABASE_NAME=database
-
-TOKEN_SECRET_KEY=secret
-TOKEN_ALGORITHM=HS256
-
-PASSWORD_ALGORITHM=sha256_crypt
-
-LLM_ENABLED=True
-LLM_HOST=localhost
+cp .env.example .env
 ```
+
+5. **IMPORTANT**: Edit the `.env` file and set strong secrets (especially POSTGRES_PASSWORD and TOKEN_SECRET_KEY). You can generate a secure secret key using Python:
+
+```bash
+python -c "import secrets; print(secrets.token_hex(32))"
+```
+
+6. If you have [Ollama](https://ollama.com/download) installed You can add the LLM features by setting LLM_ENABLED to True.
 
 7. Run the server
 
