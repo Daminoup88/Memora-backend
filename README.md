@@ -2,9 +2,13 @@
 
 [![Running Tests](https://github.com/Daminoup88/Memora-backend/actions/workflows/python-app.yml/badge.svg)](https://github.com/Daminoup88/Memora-backend/actions/workflows/python-app.yml) [![Last Commit](https://img.shields.io/github/last-commit/Daminoup88/Memora-backend)](https://github.com/Daminoup88/Memora-backend/commits/main) [![Contributors](https://img.shields.io/github/contributors/Daminoup88/Memora-backend?color=brightgreen)](https://github.com/Daminoup88/Memora-backend/graphs/contributors)
 
-API of the Memora project using FastAPI.
+API of the Memora project using FastAPI. The frontend app can be found here: **[Memora frontend](https://github.com/Daminoup88/Memora-frontend/)**.
 
 *ESIEE Paris - 2024 - 4th year project*
+
+## What is Memora?
+
+Memora is a memory training mobile app designed for Alzheimer’s patients. It uses Spaced Retrieval Training (SRT, based on the Leitner system) to help exercise the brain with memories uploaded by relatives.
 
 ### **Contributors**: [Luca PALAYSI](https://github.com/Lucari00), [Tilad CHRAITEH](https://github.com/TiladC), [Paul MALLARD](https://github.com/mallardp), [Damien PHILIPPE](https://github.com/Daminoup88)
 
