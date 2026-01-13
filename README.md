@@ -1,6 +1,12 @@
 # Memora backend
 
+[![Running Tests](https://github.com/Daminoup88/Memora-backend/actions/workflows/python-app.yml/badge.svg)](https://github.com/Daminoup88/Memora-backend/actions/workflows/python-app.yml) [![Last Commit](https://img.shields.io/github/last-commit/Daminoup88/Memora-backend)](https://github.com/Daminoup88/Memora-backend/commits/main) [![Contributors](https://img.shields.io/github/contributors/Daminoup88/Memora-backend?color=brightgreen)](https://github.com/Daminoup88/Memora-backend/graphs/contributors)
+
 API of the Memora project using FastAPI.
+
+*ESIEE Paris - 2024 - 4th year project*
+
+### **Contributors**: [Luca PALAYSI](https://github.com/Lucari00), [Tilad CHRAITEH](https://github.com/TiladC), [Paul MALLARD](https://github.com/mallardp), [Damien PHILIPPE](https://github.com/Daminoup88)
 
 ## Getting Started
 
@@ -22,7 +28,7 @@ See [Installation without Docker](#installation-without-docker-tested-on-windows
 2. Clone the repository
 
 ```bash
-git clone https://github.com/Lucari00/Memora-backend.git
+git clone https://github.com/Daminoup88/Memora-backend.git
 ```
 
 3. Navigate to the project directory
@@ -34,8 +40,16 @@ cd Memora-backend
 
 4. Create a `.env` file from the example one:
 
+On Linux/Mac:
+
 ```bash
 cp .env.example .env
+```
+
+On Windows:
+
+```bash
+copy .env.example .env
 ```
 
 5. **IMPORTANT**: Edit the `.env` file and set strong secrets (especially POSTGRES_PASSWORD and TOKEN_SECRET_KEY). You can generate a secure secret key using Python:
@@ -78,7 +92,7 @@ docker-compose -f compose-dev.yaml up -d --build
 1. Clone the repository
 
 ```bash
-git clone https://github.com/Lucari00/Memora-backend.git
+git clone https://github.com/Daminoup88/Memora-backend.git
 ```
 
 2. Navigate to the project directory
